@@ -80,42 +80,6 @@ static func _displace(
 		vertices[i] = dir * (1.0 + amplitude * noise.get_noise_3dv(dir))
 
 
-static func _smooth_normals(vertices: PackedVector3Array, indices: PackedInt32Array) -> PackedVector3Array:
-	var normals := PackedVector3Array()
-	normals.resize(vertices.size())
-
-	for t in range(0, indices.size(), 3):
-		var a := indices[t]
-		var b := indices[t + 1]
-		var c := indices[t + 2]
-		var face := (vertices[c] - vertices[a]).cross(vertices[b] - vertices[a])
-		normals[a] += face
-		normals[b] += face
-		normals[c] += face
-
-	for i in normals.size():
-		normals[i] = normals[i].normalized()
-	return normals
-
-
-static func _fill_flat(arrays: Array, vertices: PackedVector3Array, indices: PackedInt32Array) -> void:
-	var flat_vertices := PackedVector3Array()
-	var flat_normals := PackedVector3Array()
-	flat_vertices.resize(indices.size())
-	flat_normals.resize(indices.size())
-
-	for t in range(0, indices.size(), 3):
-		var a := vertices[indices[t]]
-		var b := vertices[indices[t + 1]]
-		var c := vertices[indices[t + 2]]
-		var normal := (c - a).cross(b - a).normalized()
-		flat_vertices[t] = a; flat_vertices[t + 1] = b; flat_vertices[t + 2] = c
-		flat_normals[t] = normal; flat_normals[t + 1] = normal; flat_normals[t + 2] = normal
-
-	arrays[Mesh.ARRAY_VERTEX] = flat_vertices
-	arrays[Mesh.ARRAY_NORMAL] = flat_normals
-
-
 static func generate_icosphere(
 	subdivisions: int = 0,
 	seed: int = 0,
@@ -140,16 +104,4 @@ static func generate_icosphere(
 
 	indices = _subdivide(vertices, indices, subdivisions)
 	_displace(vertices, seed, amplitude, frequency)
-
-	var arrays := []
-	arrays.resize(Mesh.ARRAY_MAX)
-	if flat_shading:
-		_fill_flat(arrays, vertices, indices)
-	else:
-		arrays[Mesh.ARRAY_VERTEX] = vertices
-		arrays[Mesh.ARRAY_NORMAL] = _smooth_normals(vertices, indices)
-		arrays[Mesh.ARRAY_INDEX] = indices
-
-	var mesh := ArrayMesh.new()
-	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
-	return mesh
+	return MeshUtils.build_mesh(vertices, indices, flat_shading)
