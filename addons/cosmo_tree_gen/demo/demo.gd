@@ -1,4 +1,4 @@
-# Copyright © 2026 CosmonautFrog - GNU GPL v3 License
+# Copyright © 2026 CosmonautFrog - MIT License
 
 @tool
 extends StaticBody3D

@@ -1,4 +1,4 @@
-# Copyright © 2026 CosmonautFrog - GNU GPL v3 License
+# Copyright © 2026 CosmonautFrog - MIT License
 
 class_name MeshUtils  # TODO: be used as `const MeshUtils = preload(".../mesh_utils.gd")`
 extends RefCounted

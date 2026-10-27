@@ -1,4 +1,4 @@
-# Copyright © 2026 CosmonautFrog - GNU GPL v3 License
+# Copyright © 2026 CosmonautFrog - MIT License
 
 class_name TrunkGen  # TODO: be used as `const TrunkGen = preload(".../trunk_gen.gd")`
 extends RefCounted
