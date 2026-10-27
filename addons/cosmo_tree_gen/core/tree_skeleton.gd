@@ -12,6 +12,7 @@ static func grow_branches(
 	parent: Branch,
 	count: int,
 	start: float,
+	end: float,
 	angle: float,
 	length_ratio: float,
 	radius_ratio: float,
@@ -27,7 +28,7 @@ static func grow_branches(
 		var rng := RandomNumberGenerator.new()
 		rng.seed = branch_seed
 
-		var t := lerpf(start, 1.0, (k + rng.randf()) / count)
+		var t := lerpf(start, end, (k + rng.randf()) / count)
 		var origin := parent.sample(t)
 		var tangent := parent.tangent_at(t)
 		var parent_radius := parent.radius_at(t)

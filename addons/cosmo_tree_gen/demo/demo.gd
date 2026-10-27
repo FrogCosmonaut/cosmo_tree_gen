@@ -48,6 +48,10 @@ extends StaticBody3D
 	set(value):
 		branch_start = value
 		_regenerate()
+@export_range(0.0, 1.0) var branch_end: float = 0.9:
+	set(value):
+		branch_end = value
+		_regenerate()
 @export_range(0.0, 90.0) var branch_angle: float = 50.0:
 	set(value):
 		branch_angle = value
@@ -136,6 +140,7 @@ func generate_tree() -> void:
 		trunk,
 		branch_count,
 		branch_start,
+		branch_end,
 		branch_angle,
 		branch_length,
 		branch_radius,
@@ -156,15 +161,17 @@ func generate_tree() -> void:
 	# TODO: add different types of foliage, E.G.: dead trees, pines, etc...
 	var foliage_node := Node3D.new()  # TMP: all the icospheres should be joined in a single mesh.
 	foliage_node.name = "Foliage"
-	for i in branches.size():
+	var tips: Array[Branch] = [trunk]
+	tips.append_array(branches)
+	for i in tips.size():
 		var foliage_mesh := MeshInstance3D.new()
 		foliage_mesh.mesh = IcosphereGen.generate_icosphere(
-			noise_seed + i,  # Increment seed so each icosphere is unique.
+			noise_seed + tips[i].branch_seed,
 			foliage_subdivisions,
 			foliage_amplitude,
 			foliage_frequency,
 			flat_shading,
 		)
-		foliage_mesh.position = branches[i].tip()
+		foliage_mesh.position = tips[i].tip()
 		foliage_node.add_child(foliage_mesh)
 	add_child(foliage_node)
