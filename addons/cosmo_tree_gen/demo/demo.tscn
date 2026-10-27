@@ -26,10 +26,10 @@ _surfaces = [{
 [node name="Demo" type="StaticBody3D" unique_id=1003649436]
 script = ExtResource("1_cycnu")
 
-[node name="Trunk" type="MeshInstance3D" parent="." unique_id=2060637032]
+[node name="Trunk" type="MeshInstance3D" parent="." unique_id=1064647439]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
 mesh = SubResource("ArrayMesh_cycnu")
 
-[node name="Foliage" type="MeshInstance3D" parent="." unique_id=1935170840]
+[node name="Foliage" type="MeshInstance3D" parent="." unique_id=544664233]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, 0)
 mesh = SubResource("ArrayMesh_pq1dq")

@@ -64,7 +64,7 @@ static func _subdivide(
 
 static func _displace(
 	vertices: PackedVector3Array,
-	seed: int,
+	noise_seed: int,
 	amplitude: float,
 	frequency: float,
 ) -> void:
@@ -72,7 +72,7 @@ static func _displace(
 		return
 
 	var noise := FastNoiseLite.new()
-	noise.seed = seed
+	noise.seed = noise_seed
 	noise.frequency = frequency
 
 	for i in vertices.size():
@@ -81,8 +81,8 @@ static func _displace(
 
 
 static func generate_icosphere(
+	noise_seed: int = 0,
 	subdivisions: int = 0,
-	seed: int = 0,
 	amplitude: float = 0.0,
 	frequency: float = 1.5,
 	flat_shading: bool = false,
@@ -103,5 +103,5 @@ static func generate_icosphere(
 	])
 
 	indices = _subdivide(vertices, indices, subdivisions)
-	_displace(vertices, seed, amplitude, frequency)
+	_displace(vertices, noise_seed, amplitude, frequency)
 	return MeshUtils.build_mesh(vertices, indices, flat_shading)

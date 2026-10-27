@@ -4,9 +4,9 @@
 extends StaticBody3D
 
 @export_tool_button("Generate Tree") var gen: Callable = generate_tree
-@export var seed: int = 42:
+@export var noise_seed: int = 42:
 	set(value):
-		seed = value
+		noise_seed = value
 		_regenerate()
 @export var flat_shading: bool = true:
 	set(value):
@@ -67,6 +67,7 @@ func generate_tree() -> void:
 	_clear_generated()
 
 	var cyl := TrunkGen.generate_trunk(
+		noise_seed,
 		trunk_quality,
 		trunk_height,
 		trunk_radius_bottom,
@@ -82,8 +83,8 @@ func generate_tree() -> void:
 
 	# TODO: add different types of foliage, E.G.: dead trees, pines, etc...
 	var ico := IcosphereGen.generate_icosphere(
+		noise_seed,
 		foliage_subdivisions,
-		seed,
 		foliage_amplitude,
 		foliage_frequency,
 		flat_shading,

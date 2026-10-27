@@ -16,6 +16,7 @@ const BASE_HEIGHT_SEGMENTS: int = 3
 # TODO: instead of a CylinderMesh, build it procedurally.
 # L-Systems / Space colonization algorithm
 static func generate_trunk(
+	noise_seed: int,
 	quality: int,
 	height: float,
 	bottom_radius: float,
@@ -25,6 +26,10 @@ static func generate_trunk(
 	quality = maxi(quality, 1)
 	var radial := BASE_RADIAL_SEGMENTS * quality
 	var rings := BASE_HEIGHT_SEGMENTS * quality
+
+	var noise := FastNoiseLite.new()
+	noise.seed = noise_seed
+	noise.frequency = 0.5
 
 	var cyl := CylinderMesh.new()
 	cyl.height = height
