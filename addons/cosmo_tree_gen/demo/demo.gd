@@ -30,6 +30,14 @@ extends StaticBody3D
 	set(value):
 		trunk_radius_top = value
 		_regenerate()
+@export_range(0.0, 2.0) var trunk_lean: float = 0.6:
+	set(value):
+		trunk_lean = value
+		_regenerate()
+@export_range(0.0, 1.0) var trunk_wobble: float = 0.15:
+	set(value):
+		trunk_wobble = value
+		_regenerate()
 
 @export_group("Foliage")
 @export_range(0, 4) var foliage_subdivisions: int = 1:
@@ -66,32 +74,33 @@ func _clear_generated() -> void:
 func generate_tree() -> void:
 	_clear_generated()
 
-	var cyl := TrunkGen.generate_trunk(
+	var rng := RandomNumberGenerator.new()
+	rng.seed = noise_seed
+	var angle := rng.randf() * TAU
+	var lean_vec := Vector3(cos(angle), 0.0, sin(angle)) * trunk_lean
+	var trunk_top := Vector3(lean_vec.x, trunk_height, lean_vec.z)
+
+	var trunk := MeshInstance3D.new()
+	trunk.mesh = TrunkGen.generate_trunk(
 		noise_seed,
 		trunk_quality,
 		trunk_height,
 		trunk_radius_bottom,
 		trunk_radius_top,
+		lean_vec,
+		trunk_wobble,
 		flat_shading,
 	)
-	var trunk := MeshInstance3D.new()
-	trunk.name = "Trunk"
-	trunk.mesh = cyl
-	trunk.position = Vector3(0.0, trunk_height * 0.5, 0.0)
 	add_child(trunk)
-	trunk.owner = self
 
 	# TODO: add different types of foliage, E.G.: dead trees, pines, etc...
-	var ico := IcosphereGen.generate_icosphere(
+	var foliage := MeshInstance3D.new()
+	foliage.mesh = IcosphereGen.generate_icosphere(
 		noise_seed,
 		foliage_subdivisions,
 		foliage_amplitude,
 		foliage_frequency,
 		flat_shading,
 	)
-	var foliage := MeshInstance3D.new()
-	foliage.name = "Foliage"
-	foliage.mesh = ico
-	foliage.position = Vector3(0.0, trunk_height, 0.0)
+	foliage.position = trunk_top
 	add_child(foliage)
-	foliage.owner = self
