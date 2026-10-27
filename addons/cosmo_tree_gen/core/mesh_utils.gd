@@ -89,3 +89,34 @@ static func flatten_mesh(mesh: Mesh) -> ArrayMesh:
 	)
 	result.surface_set_material(0, mesh.surface_get_material(0))
 	return result
+
+
+static func append_tube(
+	vertices: PackedVector3Array,
+	indices: PackedInt32Array,
+	points: PackedVector3Array,
+	radii: PackedFloat32Array,
+	radial: int,
+) -> void:
+	var base := vertices.size()
+	var count := points.size()
+	var tangent := (points[1] - points[0]).normalized()
+	var helper := Vector3.RIGHT if absf(tangent.y) > 0.9 else Vector3.UP
+	var normal := tangent.cross(helper).normalized()
+
+	for i in count:
+		tangent = (points[mini(i + 1, count - 1)] - points[maxi(i - 1, 0)]).normalized()
+		normal = (normal - tangent * normal.dot(tangent)).normalized()
+		var binormal := normal.cross(tangent)
+		for j in radial:
+			var angle := TAU * j / radial
+			vertices.push_back(points[i] + (normal * cos(angle) + binormal * sin(angle)) * radii[i])
+
+	for i in count - 1:
+		for j in radial:
+			var j_next := (j + 1) % radial
+			var a := base + i * radial + j
+			var b := base + i * radial + j_next
+			var c := base + (i + 1) * radial + j
+			var d := base + (i + 1) * radial + j_next
+			indices.append_array(PackedInt32Array([d, c, a, d, a, b]))

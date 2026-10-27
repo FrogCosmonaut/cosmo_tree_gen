@@ -39,6 +39,40 @@ extends StaticBody3D
 		trunk_wobble = value
 		_regenerate()
 
+@export_group("Branches")
+@export_range(0, 20) var branch_count: int = 6:
+	set(value):
+		branch_count = value
+		_regenerate()
+@export_range(0.0, 1.0) var branch_start: float = 0.4:
+	set(value):
+		branch_start = value
+		_regenerate()
+@export_range(0.0, 90.0) var branch_angle: float = 50.0:
+	set(value):
+		branch_angle = value
+		_regenerate()
+@export_range(0.05, 1.0) var branch_length: float = 0.4:
+	set(value):
+		branch_length = value
+		_regenerate()
+@export_range(0.1, 1.0) var branch_radius: float = 0.6:
+	set(value):
+		branch_radius = value
+		_regenerate()
+@export_range(1, 8) var branch_segments: int = 3:
+	set(value):
+		branch_segments = value
+		_regenerate()
+@export_range(0.0, 2.0) var branch_gnarl: float = 0.3:
+	set(value):
+		branch_gnarl = value
+		_regenerate()
+@export_range(-2.0, 2.0) var branch_up_force: float = 0.5:
+	set(value):
+		branch_up_force = value
+		_regenerate()
+
 @export_group("Foliage")
 @export_range(0, 4) var foliage_subdivisions: int = 1:
 	set(value):
@@ -78,10 +112,11 @@ func generate_tree() -> void:
 	rng.seed = noise_seed
 	var angle := rng.randf() * TAU
 	var lean_vec := Vector3(cos(angle), 0.0, sin(angle)) * trunk_lean
-	var trunk_top := Vector3(lean_vec.x, trunk_height, lean_vec.z)
+	var trunk_radial := TrunkGen.BASE_RADIAL_SEGMENTS * trunk_quality
+	var branch_radial := maxi(3, trunk_radial - 2)
 
-	var trunk := MeshInstance3D.new()
-	trunk.mesh = TrunkGen.generate_trunk(
+	# Trunk
+	var trunk := TrunkGen.generate_trunk(
 		noise_seed,
 		trunk_quality,
 		trunk_height,
@@ -89,18 +124,47 @@ func generate_tree() -> void:
 		trunk_radius_top,
 		lean_vec,
 		trunk_wobble,
-		flat_shading,
 	)
-	add_child(trunk)
+	var vertices := PackedVector3Array()
+	var indices := PackedInt32Array()
+	MeshUtils.append_tube(
+		vertices, indices, trunk.points, trunk.radii, trunk_radial
+	)
 
-	# TODO: add different types of foliage, E.G.: dead trees, pines, etc...
-	var foliage := MeshInstance3D.new()
-	foliage.mesh = IcosphereGen.generate_icosphere(
-		noise_seed,
-		foliage_subdivisions,
-		foliage_amplitude,
-		foliage_frequency,
-		flat_shading,
+	# Branches
+	var branches := TreeSkeleton.grow_branches(
+		trunk,
+		branch_count,
+		branch_start,
+		branch_angle,
+		branch_length,
+		branch_radius,
+		branch_segments,
+		branch_gnarl,
+		branch_up_force,
 	)
-	foliage.position = trunk_top
-	add_child(foliage)
+	for branch in branches:
+		MeshUtils.append_tube(vertices, indices, branch.points, branch.radii, branch_radial)
+
+	# Trunk + Branches mesh
+	var trunk_mesh := MeshInstance3D.new()
+	trunk_mesh.name = "Trunk"
+	trunk_mesh.mesh = MeshUtils.build_mesh(vertices, indices, flat_shading)
+	add_child(trunk_mesh)
+
+	# Foliage
+	# TODO: add different types of foliage, E.G.: dead trees, pines, etc...
+	var foliage_node := Node3D.new()  # TMP: all the icospheres should be joined in a single mesh.
+	foliage_node.name = "Foliage"
+	for i in branches.size():
+		var foliage_mesh := MeshInstance3D.new()
+		foliage_mesh.mesh = IcosphereGen.generate_icosphere(
+			noise_seed + i,  # Increment seed so each icosphere is unique.
+			foliage_subdivisions,
+			foliage_amplitude,
+			foliage_frequency,
+			flat_shading,
+		)
+		foliage_mesh.position = branches[i].tip()
+		foliage_node.add_child(foliage_mesh)
+	add_child(foliage_node)
