@@ -12,6 +12,7 @@ config_version=5
 
 config/name="CosmoTreeGen"
 config/tags=PackedStringArray("addons")
+run/main_scene="uid://c8fxt01sxw6ut"
 config/features=PackedStringArray("4.6", "Forward Plus")
 
 [editor_plugins]

@@ -4,6 +4,19 @@
 [ext_resource type="Script" uid="uid://c0ggn4wsaa746" path="res://addons/cosmo_tree_gen/core/resources/trunk_params.gd" id="2_u2se3"]
 [ext_resource type="Script" uid="uid://1tt4by0vsl04" path="res://addons/cosmo_tree_gen/core/resources/foliage_params.gd" id="3_yuqv1"]
 
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_u2se3"]
+sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
+ground_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
+
+[sub_resource type="Sky" id="Sky_yuqv1"]
+sky_material = SubResource("ProceduralSkyMaterial_u2se3")
+
+[sub_resource type="Environment" id="Environment_cpj4b"]
+background_mode = 2
+sky = SubResource("Sky_yuqv1")
+tonemap_mode = 2
+glow_enabled = true
+
 [sub_resource type="Gradient" id="Gradient_nwdni"]
 colors = PackedColorArray(0, 0.29803923, 0.10980392, 1, 0.13725491, 0.47843137, 0.20392157, 1)
 
@@ -35,6 +48,16 @@ script = ExtResource("3_yuqv1")
 
 [node name="Demo" type="Node3D" unique_id=457106141]
 
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1552366562]
+environment = SubResource("Environment_cpj4b")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=869552325]
+transform = Transform3D(-0.8660254, -0.43301278, 0.25, 0, 0.49999997, 0.86602545, -0.50000006, 0.75, -0.43301266, 0, 0, 0)
+shadow_enabled = true
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=2073012112]
+transform = Transform3D(1, 0, 0, 0, 0.9869121, 0.16125932, 0, -0.16125932, 0.9869121, 0, 3.94577, 5.125202)
+
 [node name="Ground" type="MeshInstance3D" parent="." unique_id=364196551]
 mesh = SubResource("PlaneMesh_nwdni")
 
@@ -42,4 +65,5 @@ mesh = SubResource("PlaneMesh_nwdni")
 script = ExtResource("1_cycnu")
 trunk_params = SubResource("Resource_u2se3")
 foliage = SubResource("Resource_yuqv1")
+use_collision = true
 metadata/_custom_type_script = "uid://thf11ljosiks"
