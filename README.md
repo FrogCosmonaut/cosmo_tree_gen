@@ -1,7 +1,8 @@
 # Cosmo Tree Gen
+Godot 4.4+ required. Developed in 4.6.2.stable.
 WIP: Procedural low-poly tree generator.
 
-100% Human made. No AI was or ever will be used in this repo.
+100% Human made. No AI was or ever will be used in this project.
 
 ## References used
 Icosphere:
