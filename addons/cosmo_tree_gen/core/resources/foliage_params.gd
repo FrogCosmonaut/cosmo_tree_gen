@@ -17,6 +17,10 @@ enum FoliageType {
 	set(value):
 		radius = value
 		emit_changed()
+@export_range(0.0, 1.0) var length_influence: float = 0.4:
+	set(value):
+		length_influence = value
+		emit_changed()
 @export_range(0, 4) var subdivisions: int = 1:
 	set(value):
 		subdivisions = value
