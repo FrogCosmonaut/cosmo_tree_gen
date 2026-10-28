@@ -67,6 +67,25 @@ func _clear_generated() -> void:
 			node.free()
 
 
+func _add_icospheres(branches: Array[Branch]) -> void:
+	# TODO: all the icospheres should be joined in a single mesh.
+	var foliage_node := Node3D.new()
+	foliage_node.name = "Foliage"
+	for branch in branches:
+		var foliage_mesh := MeshInstance3D.new()
+		foliage_mesh.mesh = IcosphereGen.generate_icosphere(
+			branch.branch_seed,
+			foliage.radius,
+			foliage.subdivisions,
+			foliage.amplitude,
+			foliage.frequency,
+			flat_shading,
+		)
+		foliage_mesh.position = branch.tip()
+		foliage_node.add_child(foliage_mesh)
+	add_child(foliage_node)
+
+
 func generate_tree() -> void:
 	_clear_generated()
 
@@ -104,20 +123,10 @@ func generate_tree() -> void:
 
 	# Foliage
 	# TODO: add different types of foliage, E.G.: dead trees, pines, etc...
-	var foliage_node := Node3D.new()  # TMP: all the icospheres should be joined in a single mesh.
-	foliage_node.name = "Foliage"
 	var tips: Array[Branch] = [trunk]
-	tips.append_array(parents)
-	for i in tips.size():
-		var foliage_mesh := MeshInstance3D.new()
-		foliage_mesh.mesh = IcosphereGen.generate_icosphere(
-			tips[i].branch_seed,
-			foliage.radius,
-			foliage.subdivisions,
-			foliage.amplitude,
-			foliage.frequency,
-			flat_shading,
-		)
-		foliage_mesh.position = tips[i].tip()
-		foliage_node.add_child(foliage_mesh)
-	add_child(foliage_node)
+	if not branches.is_empty():
+		tips.append_array(parents)
+
+	match foliage.type:
+		CosmoFoliageParams.FoliageType.NONE: pass  # TODO: maybe close branch caps?
+		CosmoFoliageParams.FoliageType.ICOSPHERES: _add_icospheres(tips)
