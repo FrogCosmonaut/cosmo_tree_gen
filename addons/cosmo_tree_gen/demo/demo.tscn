@@ -1,22 +1,45 @@
 [gd_scene format=3 uid="uid://c8fxt01sxw6ut"]
 
-[ext_resource type="Script" uid="uid://thf11ljosiks" path="res://addons/cosmo_tree_gen/demo/demo.gd" id="1_cycnu"]
+[ext_resource type="Script" uid="uid://thf11ljosiks" path="res://addons/cosmo_tree_gen/core/cosmo_tree_gen.gd" id="1_cycnu"]
 [ext_resource type="Script" uid="uid://c0ggn4wsaa746" path="res://addons/cosmo_tree_gen/core/resources/trunk_params.gd" id="2_u2se3"]
-[ext_resource type="Script" uid="uid://ceh6ii6tlpph4" path="res://addons/cosmo_tree_gen/core/resources/branch_level.gd" id="3_cpj4b"]
 [ext_resource type="Script" uid="uid://1tt4by0vsl04" path="res://addons/cosmo_tree_gen/core/resources/foliage_params.gd" id="3_yuqv1"]
 
-[sub_resource type="Resource" id="Resource_cpj4b"]
+[sub_resource type="Gradient" id="Gradient_nwdni"]
+colors = PackedColorArray(0, 0.29803923, 0.10980392, 1, 0.13725491, 0.47843137, 0.20392157, 1)
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_cycnu"]
+noise_type = 3
+seed = 42
+frequency = 0.2
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_pq1dq"]
+width = 64
+height = 64
+generate_mipmaps = false
+noise = SubResource("FastNoiseLite_cycnu")
+color_ramp = SubResource("Gradient_nwdni")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_u2se3"]
+albedo_texture = SubResource("NoiseTexture2D_pq1dq")
+texture_filter = 0
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_nwdni"]
+material = SubResource("StandardMaterial3D_u2se3")
+size = Vector2(4, 4)
+
+[sub_resource type="Resource" id="Resource_u2se3"]
 script = ExtResource("2_u2se3")
 
-[sub_resource type="Resource" id="Resource_1ld14"]
-script = ExtResource("3_cpj4b")
-metadata/_custom_type_script = "uid://ceh6ii6tlpph4"
-
-[sub_resource type="Resource" id="Resource_np5pe"]
+[sub_resource type="Resource" id="Resource_yuqv1"]
 script = ExtResource("3_yuqv1")
 
-[node name="Demo" type="StaticBody3D" unique_id=1003649436]
+[node name="Demo" type="Node3D" unique_id=457106141]
+
+[node name="Ground" type="MeshInstance3D" parent="." unique_id=364196551]
+mesh = SubResource("PlaneMesh_nwdni")
+
+[node name="CosmoTreeGen" type="Node3D" parent="." unique_id=1925701942]
 script = ExtResource("1_cycnu")
-trunk_params = SubResource("Resource_cpj4b")
-branch_levels = Array[ExtResource("3_cpj4b")]([SubResource("Resource_1ld14")])
-foliage = SubResource("Resource_np5pe")
+trunk_params = SubResource("Resource_u2se3")
+foliage = SubResource("Resource_yuqv1")
+metadata/_custom_type_script = "uid://thf11ljosiks"

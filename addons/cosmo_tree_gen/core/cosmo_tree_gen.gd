@@ -1,15 +1,22 @@
 # Copyright © 2026 CosmonautFrog - MIT License
 
 @tool
-extends StaticBody3D
+@icon("../tree.svg")
+class_name CosmoTreeGen
+extends Node3D
 
-const Branch := preload("../core/branch.gd")
-const TrunkGen := preload("../core/trunk_gen.gd")
-const MeshUtils := preload("../core/mesh_utils.gd")
-const TreeSkeleton := preload("../core/tree_skeleton.gd")
-const IcosphereGen := preload("../core/icosphere_gen.gd")
+const Branch := preload("./branch.gd")
+const TrunkGen := preload("./trunk_gen.gd")
+const MeshUtils := preload("./mesh_utils.gd")
+const TreeSkeleton := preload("./tree_skeleton.gd")
+const IcosphereGen := preload("./icosphere_gen.gd")
 
 @export_tool_button("Generate Tree") var gen: Callable = generate_tree
+@export var auto_update: bool = true:
+	set(value):
+		auto_update = value
+		if auto_update:
+			_regenerate()
 @export var noise_seed: int = 42:
 	set(value):
 		noise_seed = value
@@ -41,6 +48,10 @@ const IcosphereGen := preload("../core/icosphere_gen.gd")
 		_regenerate()
 
 
+func _init() -> void:
+	name = "CosmoTreeGen"
+
+
 func _ready() -> void:
 	_swap_watch(null, trunk_params)
 	_swap_watch(null, foliage)
@@ -55,6 +66,9 @@ func _swap_watch(old: Resource, new: Resource) -> void:
 
 
 func _regenerate() -> void:
+	if not auto_update:
+		return
+
 	if is_node_ready():
 		generate_tree()
 
