@@ -10,6 +10,7 @@ const TrunkGen := preload("./trunk_gen.gd")
 const MeshUtils := preload("./mesh_utils.gd")
 const TreeSkeleton := preload("./tree_skeleton.gd")
 const IcosphereGen := preload("./icosphere_gen.gd")
+const LeafGen := preload("./leaf_gen.gd")
 
 @export_tool_button("Generate Tree") var gen: Callable = generate_tree
 @export var auto_update: bool = true:
@@ -97,7 +98,7 @@ func _set_foliage_material(value: Material) -> void:
 		return
 
 	foliage_mesh.mesh.surface_set_material(0, foliage_material)
-	if foliage_material is StandardMaterial3D:
+	if foliage.type == CosmoFoliageParams.FoliageType.ICOSPHERES and foliage_material is StandardMaterial3D:
 		if not (foliage_material as StandardMaterial3D).uv1_triplanar:
 			push_warning("CosmoTreeGen: foliage_material should use UV1 triplanar!")
 
@@ -155,14 +156,28 @@ func _add_icospheres(branches: Array[Branch]) -> void:
 			indices,
 			branch.tip(),
 			branch.branch_seed,
-			foliage.radius * lerpf(1.0, length_ratio, foliage.length_influence),
-			foliage.subdivisions,
-			foliage.amplitude,
-			foliage.frequency,
+			foliage.icosphere_radius * lerpf(1.0, length_ratio, foliage.icosphere_length_influence),
+			foliage.icosphere_subdivisions,
+			foliage.icosphere_amplitude,
+			foliage.icosphere_frequency,
 		)
 	var foliage_mesh := MeshInstance3D.new()
 	foliage_mesh.name = "Foliage"
 	foliage_mesh.mesh = MeshUtils.build_mesh(vertices, indices, flat_shading)
+	add_child(foliage_mesh)
+
+
+func _add_leaves(tips: Array[Branch]) -> void:
+	var vertices := PackedVector3Array()
+	var indices := PackedInt32Array()
+	var uvs := PackedVector2Array()
+	# tips[0] is the trunk, only gets leaves when there are no branches
+	var first := 1 if tips.size() > 1 else 0
+	for i in range(first, tips.size()):
+		LeafGen.append_leaves(vertices, indices, uvs, tips[i], foliage)
+	var foliage_mesh := MeshInstance3D.new()
+	foliage_mesh.name = "Foliage"
+	foliage_mesh.mesh = MeshUtils.build_mesh(vertices, indices, false, uvs)
 	add_child(foliage_mesh)
 
 
@@ -238,6 +253,7 @@ func generate_tree() -> void:
 	match foliage.type:
 		CosmoFoliageParams.FoliageType.NONE: pass  # TODO: maybe close branch caps?
 		CosmoFoliageParams.FoliageType.ICOSPHERES: _add_icospheres(tips)
+		CosmoFoliageParams.FoliageType.LEAVES: _add_leaves(tips)
 
 	# Materials
 	_apply_materials()
