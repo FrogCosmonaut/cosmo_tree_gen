@@ -1,4 +1,6 @@
 # Cosmo Tree Gen
+<img width="757" height="526" alt="image" src="https://github.com/user-attachments/assets/b05ba419-0642-4415-9e9c-c6571a31925a" />
+
 Work in progress!  
 
 Godot 4.4+ required. Developed in 4.6.2.stable.  
