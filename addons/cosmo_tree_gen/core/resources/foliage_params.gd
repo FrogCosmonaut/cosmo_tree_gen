@@ -63,6 +63,14 @@ enum FoliageType {
 	set(value):
 		leaf_double = value
 		emit_changed()
+@export_range(0.0, 1.0) var leaf_canopy_normals: float = 0.8:
+	set(value):
+		leaf_canopy_normals = value
+		emit_changed()
+@export_range(0.0, 1.0) var leaf_inner_ao: float = 0.35:
+	set(value):
+		leaf_inner_ao = value
+		emit_changed()
 
 
 func _validate_property(property: Dictionary) -> void:

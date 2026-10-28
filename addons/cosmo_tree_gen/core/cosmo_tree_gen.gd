@@ -175,9 +175,24 @@ func _add_leaves(tips: Array[Branch]) -> void:
 	var first := 1 if tips.size() > 1 else 0
 	for i in range(first, tips.size()):
 		LeafGen.append_leaves(vertices, indices, uvs, tips[i], foliage)
+
+	var normals := PackedVector3Array()
+	var colors := PackedColorArray()
+	LeafGen.canopy_shading(vertices, normals, colors, foliage)
+
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = vertices
+	arrays[Mesh.ARRAY_NORMAL] = normals
+	arrays[Mesh.ARRAY_COLOR] = colors
+	arrays[Mesh.ARRAY_TEX_UV] = uvs
+	arrays[Mesh.ARRAY_INDEX] = indices
+	var mesh := ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+
 	var foliage_mesh := MeshInstance3D.new()
 	foliage_mesh.name = "Foliage"
-	foliage_mesh.mesh = MeshUtils.build_mesh(vertices, indices, false, uvs)
+	foliage_mesh.mesh = mesh
 	add_child(foliage_mesh)
 
 

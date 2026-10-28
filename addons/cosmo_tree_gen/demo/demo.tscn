@@ -47,6 +47,59 @@ texture_filter = 0
 material = SubResource("StandardMaterial3D_u2se3")
 size = Vector2(10, 4)
 
+[sub_resource type="Resource" id="Resource_08yoa"]
+script = ExtResource("2_u2se3")
+height = 4.0
+radius_bottom = 0.25
+lean = 0.721
+metadata/_custom_type_script = "uid://c0ggn4wsaa746"
+
+[sub_resource type="Resource" id="Resource_fxgjp"]
+script = ExtResource("3_cpj4b")
+start = 0.194
+end = 0.698
+angle = 73.119
+length = 0.274
+radius = 0.657
+segments = 1
+up_force = 0.33499999999999996
+metadata/_custom_type_script = "uid://ceh6ii6tlpph4"
+
+[sub_resource type="Resource" id="Resource_s6gsv"]
+script = ExtResource("3_yuqv1")
+icosphere_subdivisions = 2
+metadata/_custom_type_script = "uid://1tt4by0vsl04"
+
+[sub_resource type="Resource" id="Resource_niwkb"]
+script = ExtResource("2_u2se3")
+height = 0.4
+radius_bottom = 0.01
+radius_top = 0.0
+lean = 0.0
+wobble = 0.0
+
+[sub_resource type="Resource" id="Resource_febos"]
+script = ExtResource("3_cpj4b")
+count = 2
+start = 0.372
+end = 1.0
+angle = 90.0
+length = 1.0
+radius = 1.0
+segments = 1
+gnarl = 0.419
+up_force = 0.31700000000000017
+metadata/_custom_type_script = "uid://ceh6ii6tlpph4"
+
+[sub_resource type="Resource" id="Resource_usong"]
+script = ExtResource("3_yuqv1")
+icosphere_radius = 0.59
+icosphere_amplitude = 0.136
+icosphere_frequency = 3.346
+leaf_size = 0.1
+leaf_start = 0.0
+leaf_angle = 54.75
+
 [sub_resource type="Resource" id="Resource_u2se3"]
 script = ExtResource("2_u2se3")
 radius_bottom = 0.2
@@ -108,28 +161,6 @@ alpha_antialiasing_mode = 0
 albedo_texture = ExtResource("7_manqb")
 texture_filter = 2
 
-[sub_resource type="Resource" id="Resource_08yoa"]
-script = ExtResource("2_u2se3")
-height = 4.9
-radius_bottom = 0.25
-lean = 0.721
-metadata/_custom_type_script = "uid://c0ggn4wsaa746"
-
-[sub_resource type="Resource" id="Resource_fxgjp"]
-script = ExtResource("3_cpj4b")
-start = 0.194
-end = 0.698
-angle = 73.119
-length = 0.274
-radius = 0.657
-segments = 1
-up_force = 0.33499999999999996
-metadata/_custom_type_script = "uid://ceh6ii6tlpph4"
-
-[sub_resource type="Resource" id="Resource_s6gsv"]
-script = ExtResource("3_yuqv1")
-metadata/_custom_type_script = "uid://1tt4by0vsl04"
-
 [sub_resource type="Resource" id="Resource_71ryk"]
 script = ExtResource("2_u2se3")
 height = 0.3
@@ -157,36 +188,6 @@ leaf_count = 20
 leaf_size = 0.47
 leaf_start = 0.0
 
-[sub_resource type="Resource" id="Resource_niwkb"]
-script = ExtResource("2_u2se3")
-height = 0.4
-radius_bottom = 0.01
-radius_top = 0.0
-lean = 0.0
-wobble = 0.0
-
-[sub_resource type="Resource" id="Resource_febos"]
-script = ExtResource("3_cpj4b")
-count = 2
-start = 0.372
-end = 1.0
-angle = 90.0
-length = 1.0
-radius = 1.0
-segments = 1
-gnarl = 0.419
-up_force = 0.31700000000000017
-metadata/_custom_type_script = "uid://ceh6ii6tlpph4"
-
-[sub_resource type="Resource" id="Resource_usong"]
-script = ExtResource("3_yuqv1")
-icosphere_radius = 0.59
-icosphere_amplitude = 0.136
-icosphere_frequency = 3.346
-leaf_size = 0.1
-leaf_start = 0.0
-leaf_angle = 54.75
-
 [node name="Demo" type="Node3D" unique_id=457106141]
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1552366562]
@@ -202,7 +203,31 @@ transform = Transform3D(1, 0, 0, 0, 0.9961947, 0.08715574, 0, -0.08715574, 0.996
 [node name="Ground" type="MeshInstance3D" parent="." unique_id=364196551]
 mesh = SubResource("PlaneMesh_nwdni")
 
-[node name="CosmoTreeGen" type="Node3D" parent="." unique_id=1925701942]
+[node name="Icospheres" type="Node3D" parent="." unique_id=1538727374]
+
+[node name="LowPoly" type="Node3D" parent="Icospheres" unique_id=2106527168]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 0)
+script = ExtResource("1_cycnu")
+trunk_params = SubResource("Resource_08yoa")
+branch_levels = Array[ExtResource("3_cpj4b")]([SubResource("Resource_fxgjp")])
+foliage = SubResource("Resource_s6gsv")
+trunk_material = ExtResource("5_cpj4b")
+foliage_material = ExtResource("7_1ld14")
+metadata/_custom_type_script = "uid://thf11ljosiks"
+
+[node name="LowPolyBush" type="Node3D" parent="Icospheres" unique_id=1773419636]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5337667, 0, 1.13)
+script = ExtResource("1_cycnu")
+trunk_params = SubResource("Resource_niwkb")
+branch_levels = Array[ExtResource("3_cpj4b")]([SubResource("Resource_febos")])
+foliage = SubResource("Resource_usong")
+trunk_material = ExtResource("5_cpj4b")
+foliage_material = ExtResource("7_1ld14")
+metadata/_custom_type_script = "uid://thf11ljosiks"
+
+[node name="CardLeaves" type="Node3D" parent="." unique_id=353850520]
+
+[node name="CosmoTreeGen" type="Node3D" parent="CardLeaves" unique_id=1925701942]
 script = ExtResource("1_cycnu")
 trunk_params = SubResource("Resource_u2se3")
 branch_levels = Array[ExtResource("3_cpj4b")]([SubResource("Resource_np5pe"), SubResource("Resource_1ld14")])
@@ -211,8 +236,8 @@ trunk_material = ExtResource("5_cpj4b")
 foliage_material = ExtResource("6_1ld14")
 metadata/_custom_type_script = "uid://thf11ljosiks"
 
-[node name="Pine" type="Node3D" parent="." unique_id=370071658]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.905, 0, -1.52)
+[node name="Pine" type="Node3D" parent="CardLeaves" unique_id=370071658]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.905, 0, 0)
 script = ExtResource("1_cycnu")
 trunk_params = SubResource("Resource_5jeb0")
 branch_levels = Array[ExtResource("3_cpj4b")]([SubResource("Resource_k1kaw")])
@@ -221,35 +246,12 @@ trunk_material = SubResource("StandardMaterial3D_fxgjp")
 foliage_material = SubResource("StandardMaterial3D_08yoa")
 metadata/_custom_type_script = "uid://thf11ljosiks"
 
-[node name="LowPoly" type="Node3D" parent="." unique_id=2106527168]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 0)
-script = ExtResource("1_cycnu")
-noise_seed = 1234
-flat_shading = true
-trunk_params = SubResource("Resource_08yoa")
-branch_levels = Array[ExtResource("3_cpj4b")]([SubResource("Resource_fxgjp")])
-foliage = SubResource("Resource_s6gsv")
-trunk_material = ExtResource("5_cpj4b")
-foliage_material = ExtResource("7_1ld14")
-metadata/_custom_type_script = "uid://thf11ljosiks"
-
-[node name="Bush" type="Node3D" parent="." unique_id=339446749]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.67, 0, 0)
+[node name="Bush" type="Node3D" parent="CardLeaves" unique_id=339446749]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.9470217, 0, 0)
 script = ExtResource("1_cycnu")
 trunk_params = SubResource("Resource_71ryk")
 branch_levels = Array[ExtResource("3_cpj4b")]([SubResource("Resource_kaepv")])
 foliage = SubResource("Resource_yuqv1")
 trunk_material = ExtResource("5_cpj4b")
 foliage_material = ExtResource("10_fxgjp")
-metadata/_custom_type_script = "uid://thf11ljosiks"
-
-[node name="LowPolyBush" type="Node3D" parent="." unique_id=1773419636]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, 1.13)
-script = ExtResource("1_cycnu")
-flat_shading = true
-trunk_params = SubResource("Resource_niwkb")
-branch_levels = Array[ExtResource("3_cpj4b")]([SubResource("Resource_febos")])
-foliage = SubResource("Resource_usong")
-trunk_material = ExtResource("5_cpj4b")
-foliage_material = ExtResource("7_1ld14")
 metadata/_custom_type_script = "uid://thf11ljosiks"
