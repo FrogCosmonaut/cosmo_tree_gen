@@ -83,6 +83,7 @@ static func _displace(
 
 static func generate_icosphere(
 	noise_seed: int = 0,
+	radius: float = 1.0,
 	subdivisions: int = 0,
 	amplitude: float = 0.0,
 	frequency: float = 1.5,
@@ -105,4 +106,6 @@ static func generate_icosphere(
 
 	indices = _subdivide(vertices, indices, subdivisions)
 	_displace(vertices, noise_seed, amplitude, frequency)
+	for i in vertices.size():
+		vertices[i] *= radius
 	return MeshUtils.build_mesh(vertices, indices, flat_shading)

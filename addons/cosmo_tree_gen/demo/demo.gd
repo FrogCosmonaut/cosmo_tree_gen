@@ -112,6 +112,7 @@ func generate_tree() -> void:
 		var foliage_mesh := MeshInstance3D.new()
 		foliage_mesh.mesh = IcosphereGen.generate_icosphere(
 			tips[i].branch_seed,
+			foliage.radius,
 			foliage.subdivisions,
 			foliage.amplitude,
 			foliage.frequency,

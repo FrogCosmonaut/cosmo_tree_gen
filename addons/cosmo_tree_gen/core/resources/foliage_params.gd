@@ -4,6 +4,10 @@
 class_name CosmoFoliageParams
 extends Resource
 
+@export_range(0.1, 5.0, 0.01) var radius: float = 1.0:
+	set(value):
+		radius = value
+		emit_changed()
 @export_range(0, 4) var subdivisions: int = 1:
 	set(value):
 		subdivisions = value
