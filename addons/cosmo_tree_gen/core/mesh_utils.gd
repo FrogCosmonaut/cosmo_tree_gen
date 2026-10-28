@@ -1,7 +1,7 @@
 # Copyright © 2026 CosmonautFrog - MIT License
 
 extends RefCounted
-## Shared helpers
+## Shared helpers.
 
 
 static func smooth_normals(vertices: PackedVector3Array, indices: PackedInt32Array) -> PackedVector3Array:
@@ -17,8 +17,13 @@ static func smooth_normals(vertices: PackedVector3Array, indices: PackedInt32Arr
 		normals[b] += face
 		normals[c] += face
 
+	# Weld vertices sharing a position (UV seams) so they get the same normal
+	var welded := {}
+	for i in vertices.size():
+		welded[vertices[i]] = welded.get(vertices[i], Vector3.ZERO) + normals[i]
+
 	for i in normals.size():
-		normals[i] = normals[i].normalized()
+		normals[i] = welded[vertices[i]].normalized()
 	return normals
 
 
@@ -93,29 +98,41 @@ static func flatten_mesh(mesh: Mesh) -> ArrayMesh:
 static func append_tube(
 	vertices: PackedVector3Array,
 	indices: PackedInt32Array,
+	uvs: PackedVector2Array,
 	points: PackedVector3Array,
 	radii: PackedFloat32Array,
 	radial: int,
 ) -> void:
 	var base := vertices.size()
 	var count := points.size()
+	var ring := radial + 1  # extra vertex per ring for the UV seam
 	var tangent := (points[1] - points[0]).normalized()
 	var helper := Vector3.RIGHT if absf(tangent.y) > 0.9 else Vector3.UP
 	var normal := tangent.cross(helper).normalized()
+	# One texture repeat per base circumference along the tube, square texels at the base
+	var v_scale := 1.0 / (TAU * maxf(radii[0], 0.001))
+	var length := 0.0
 
 	for i in count:
 		tangent = (points[mini(i + 1, count - 1)] - points[maxi(i - 1, 0)]).normalized()
 		normal = (normal - tangent * normal.dot(tangent)).normalized()
 		var binormal := normal.cross(tangent)
+		if i > 0:
+			length += points[i].distance_to(points[i - 1])
+		# u and v decrease so the texture is upright and not mirrored seen from outside
+		var v := -length * v_scale
+		var first := vertices.size()
 		for j in radial:
 			var angle := TAU * j / radial
 			vertices.push_back(points[i] + (normal * cos(angle) + binormal * sin(angle)) * radii[i])
+			uvs.push_back(Vector2(1.0 - float(j) / radial, v))
+		vertices.push_back(vertices[first])
+		uvs.push_back(Vector2(0.0, v))
 
 	for i in count - 1:
 		for j in radial:
-			var j_next := (j + 1) % radial
-			var a := base + i * radial + j
-			var b := base + i * radial + j_next
-			var c := base + (i + 1) * radial + j
-			var d := base + (i + 1) * radial + j_next
+			var a := base + i * ring + j
+			var b := a + 1
+			var c := a + ring
+			var d := c + 1
 			indices.append_array(PackedInt32Array([d, c, a, d, a, b]))

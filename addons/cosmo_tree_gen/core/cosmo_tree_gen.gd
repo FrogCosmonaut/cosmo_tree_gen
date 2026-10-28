@@ -21,7 +21,7 @@ const IcosphereGen := preload("./icosphere_gen.gd")
 	set(value):
 		noise_seed = value
 		_regenerate()
-@export var flat_shading: bool = true:
+@export var flat_shading: bool = false:
 	set(value):
 		flat_shading = value
 		_regenerate()
@@ -52,8 +52,21 @@ const IcosphereGen := preload("./icosphere_gen.gd")
 	set(value):
 		use_collision = value
 		_regenerate()
-@export_flags_3d_physics var collision_layer: int = 1
-@export_flags_3d_physics var collision_mask: int = 1
+@export_flags_3d_physics var collision_layer: int = 1:
+	set(value):
+		collision_layer = value
+		_regenerate()
+@export_flags_3d_physics var collision_mask: int = 1:
+	set(value):
+		collision_mask = value
+		_regenerate()
+
+@export_group("Materials")
+@export_custom(PROPERTY_HINT_RESOURCE_TYPE, "BaseMaterial3D,ShaderMaterial")
+var trunk_material: Material: set = _set_trunk_material
+## Foliage has no UVs, use triplanar mapping (UV1 > Triplanar) on this material.
+@export_custom(PROPERTY_HINT_RESOURCE_TYPE, "BaseMaterial3D,ShaderMaterial")
+var foliage_material: Material: set = _set_foliage_material
 
 
 func _init() -> void:
@@ -66,6 +79,34 @@ func _ready() -> void:
 	generate_tree()
 
 
+func _set_trunk_material(value: Material) -> void:
+	trunk_material = value
+
+	var trunk_mesh := get_node_or_null("Trunk") as MeshInstance3D
+	if trunk_mesh == null:
+		return
+
+	trunk_mesh.mesh.surface_set_material(0, trunk_material)
+
+
+func _set_foliage_material(value: Material) -> void:
+	foliage_material = value
+
+	var foliage_mesh := get_node_or_null("Foliage") as MeshInstance3D
+	if foliage_mesh == null:
+		return
+
+	foliage_mesh.mesh.surface_set_material(0, foliage_material)
+	if foliage_material is StandardMaterial3D:
+		if not (foliage_material as StandardMaterial3D).uv1_triplanar:
+			push_warning("CosmoTreeGen: foliage_material should use UV1 triplanar!")
+
+
+func _apply_materials() -> void:
+	_set_trunk_material(trunk_material)
+	_set_foliage_material(foliage_material)
+
+
 func _swap_watch(old: Resource, new: Resource) -> void:
 	if old and old.changed.is_connected(_regenerate):
 		old.changed.disconnect(_regenerate)
@@ -74,10 +115,7 @@ func _swap_watch(old: Resource, new: Resource) -> void:
 
 
 func _regenerate() -> void:
-	if not auto_update:
-		return
-
-	if is_node_ready():
+	if is_node_ready() and auto_update:
 		generate_tree()
 
 
@@ -131,10 +169,11 @@ func _add_icospheres(branches: Array[Branch]) -> void:
 func _generate_trunk(
 	vertices: PackedVector3Array,
 	indices: PackedInt32Array,
+	uvs: PackedVector2Array,
 	radial: int,
 ) -> Branch:
 	var trunk := TrunkGen.generate_trunk(noise_seed, trunk_params)
-	MeshUtils.append_tube(vertices, indices, trunk.points, trunk.radii, radial)
+	MeshUtils.append_tube(vertices, indices, uvs, trunk.points, trunk.radii, radial)
 	return trunk
 
 
@@ -143,6 +182,7 @@ func _generate_branches(
 	trunk: Branch,
 	vertices: PackedVector3Array,
 	indices: PackedInt32Array,
+	uvs: PackedVector2Array,
 	radial: int,
 ) -> Array[Branch]:
 	var branches: Array[Branch] = []
@@ -159,7 +199,7 @@ func _generate_branches(
 		parents = children
 
 	for branch in branches:
-		MeshUtils.append_tube(vertices, indices, branch.points, branch.radii, radial)
+		MeshUtils.append_tube(vertices, indices, uvs, branch.points, branch.radii, radial)
 
 	if branches.is_empty():
 		return []
@@ -174,9 +214,10 @@ func generate_tree() -> void:
 
 	var vertices := PackedVector3Array()
 	var indices := PackedInt32Array()
+	var uvs := PackedVector2Array()
 
 	# Trunk
-	var trunk := _generate_trunk(vertices, indices, trunk_radial)
+	var trunk := _generate_trunk(vertices, indices, uvs, trunk_radial)
 
 	# Trunk collision
 	if use_collision:
@@ -184,12 +225,12 @@ func generate_tree() -> void:
 
 	# Branches
 	var tips: Array[Branch] = [trunk]
-	tips.append_array(_generate_branches(trunk, vertices, indices, branch_radial))
+	tips.append_array(_generate_branches(trunk, vertices, indices, uvs, branch_radial))
 
 	# Create trunk + branches mesh
 	var trunk_mesh := MeshInstance3D.new()
 	trunk_mesh.name = "Trunk"
-	trunk_mesh.mesh = MeshUtils.build_mesh(vertices, indices, flat_shading)
+	trunk_mesh.mesh = MeshUtils.build_mesh(vertices, indices, flat_shading, uvs)
 	add_child(trunk_mesh)
 
 	# Foliage
@@ -197,3 +238,6 @@ func generate_tree() -> void:
 	match foliage.type:
 		CosmoFoliageParams.FoliageType.NONE: pass  # TODO: maybe close branch caps?
 		CosmoFoliageParams.FoliageType.ICOSPHERES: _add_icospheres(tips)
+
+	# Materials
+	_apply_materials()

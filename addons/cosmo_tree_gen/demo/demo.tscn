@@ -4,6 +4,8 @@
 [ext_resource type="Script" uid="uid://c0ggn4wsaa746" path="res://addons/cosmo_tree_gen/core/resources/trunk_params.gd" id="2_u2se3"]
 [ext_resource type="Script" uid="uid://ceh6ii6tlpph4" path="res://addons/cosmo_tree_gen/core/resources/branch_level.gd" id="3_cpj4b"]
 [ext_resource type="Script" uid="uid://1tt4by0vsl04" path="res://addons/cosmo_tree_gen/core/resources/foliage_params.gd" id="3_yuqv1"]
+[ext_resource type="Material" uid="uid://b7l8vw0qq0s25" path="res://addons/cosmo_tree_gen/demo/example_materials/bark.tres" id="5_cpj4b"]
+[ext_resource type="Material" uid="uid://1aem886fag5n" path="res://addons/cosmo_tree_gen/demo/example_materials/foliage.tres" id="6_np5pe"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_u2se3"]
 sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
@@ -50,6 +52,10 @@ metadata/_custom_type_script = "uid://ceh6ii6tlpph4"
 
 [sub_resource type="Resource" id="Resource_yuqv1"]
 script = ExtResource("3_yuqv1")
+radius = 0.9
+length_influence = 0.514
+amplitude = 0.6
+frequency = 2.677
 
 [node name="Demo" type="Node3D" unique_id=457106141]
 
@@ -61,7 +67,7 @@ transform = Transform3D(-0.8660254, -0.43301278, 0.25, 0, 0.49999997, 0.86602545
 shadow_enabled = true
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=2073012112]
-transform = Transform3D(1, 0, 0, 0, 0.9869121, 0.16125932, 0, -0.16125932, 0.9869121, 0, 3.94577, 5.125202)
+transform = Transform3D(1, 0, 0, 0, 0.9961947, 0.08715574, 0, -0.08715574, 0.9961947, 0, 3.94577, 6.249936)
 
 [node name="Ground" type="MeshInstance3D" parent="." unique_id=364196551]
 mesh = SubResource("PlaneMesh_nwdni")
@@ -72,4 +78,6 @@ trunk_params = SubResource("Resource_u2se3")
 branch_levels = Array[ExtResource("3_cpj4b")]([SubResource("Resource_np5pe")])
 foliage = SubResource("Resource_yuqv1")
 use_collision = true
+trunk_material = ExtResource("5_cpj4b")
+foliage_material = ExtResource("6_np5pe")
 metadata/_custom_type_script = "uid://thf11ljosiks"
