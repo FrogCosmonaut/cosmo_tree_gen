@@ -20,7 +20,7 @@ static func generate_trunk(noise_seed: int, params: CosmoTrunkParams) -> Branch:
 	var lean_vec := params.get_lean_vec(angle)
 
 	var quality := maxi(params.quality, 1)
-	var rings := BASE_HEIGHT_SEGMENTS * params.quality
+	var rings := BASE_HEIGHT_SEGMENTS * quality
 
 	var noise := FastNoiseLite.new()
 	noise.seed = noise_seed
