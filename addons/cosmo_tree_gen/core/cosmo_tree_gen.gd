@@ -90,24 +90,25 @@ func _clear_generated() -> void:
 
 
 func _add_icospheres(branches: Array[Branch]) -> void:
-	# TODO: all the icospheres should be joined in a single mesh.
-	var foliage_node := Node3D.new()
-	foliage_node.name = "Foliage"
+	var vertices := PackedVector3Array()
+	var indices := PackedInt32Array()
 	var trunk := branches[0]
 	for branch in branches:
 		var length_ratio := branch.get_length() / trunk.get_length()
-		var foliage_mesh := MeshInstance3D.new()
-		foliage_mesh.mesh = IcosphereGen.generate_icosphere(
+		IcosphereGen.append_icosphere(
+			vertices,
+			indices,
+			branch.tip(),
 			branch.branch_seed,
 			foliage.radius * lerpf(1.0, length_ratio, foliage.length_influence),
 			foliage.subdivisions,
 			foliage.amplitude,
 			foliage.frequency,
-			flat_shading,
 		)
-		foliage_mesh.position = branch.tip()
-		foliage_node.add_child(foliage_mesh)
-	add_child(foliage_node)
+	var foliage_mesh := MeshInstance3D.new()
+	foliage_mesh.name = "Foliage"
+	foliage_mesh.mesh = MeshUtils.build_mesh(vertices, indices, flat_shading)
+	add_child(foliage_mesh)
 
 
 func generate_tree() -> void:

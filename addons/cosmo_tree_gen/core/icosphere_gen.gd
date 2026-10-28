@@ -81,6 +81,41 @@ static func _displace(
 		vertices[i] = dir * (1.0 + amplitude * noise.get_noise_3dv(dir))
 
 
+static func append_icosphere(
+	vertices: PackedVector3Array,
+	indices: PackedInt32Array,
+	center: Vector3,
+	noise_seed: int = 0,
+	radius: float = 1.0,
+	subdivisions: int = 0,
+	amplitude: float = 0.0,
+	frequency: float = 1.5,
+) -> void:
+	var sphere_vertices := PackedVector3Array([
+		Vector3(-1, T, 0), Vector3(1, T, 0), Vector3(-1, -T, 0), Vector3(1, -T, 0),
+		Vector3(0, -1, T), Vector3(0, 1, T), Vector3(0, -1, -T), Vector3(0, 1, -T),
+		Vector3(T, 0, -1), Vector3(T, 0, 1), Vector3(-T, 0, -1), Vector3(-T, 0, 1),
+	])
+	for i in sphere_vertices.size():
+		sphere_vertices[i] = sphere_vertices[i].normalized()
+
+	var sphere_indices := PackedInt32Array([
+		0, 5, 11, 0, 1, 5, 0, 7, 1, 0, 10, 7, 0, 11, 10,
+		1, 9, 5, 5, 4, 11, 11, 2, 10, 10, 6, 7, 7, 8, 1,
+		3, 4, 9, 3, 2, 4, 3, 6, 2, 3, 8, 6, 3, 9, 8,
+		4, 5, 9, 2, 11, 4, 6, 10, 2, 8, 7, 6, 9, 1, 8,
+	])
+
+	sphere_indices = _subdivide(sphere_vertices, sphere_indices, subdivisions)
+	_displace(sphere_vertices, noise_seed, amplitude, frequency)
+
+	var base := vertices.size()
+	for v in sphere_vertices:
+		vertices.push_back(center + v * radius)
+	for i in sphere_indices:
+		indices.push_back(base + i)
+
+
 static func generate_icosphere(
 	noise_seed: int = 0,
 	radius: float = 1.0,
@@ -89,23 +124,9 @@ static func generate_icosphere(
 	frequency: float = 1.5,
 	flat_shading: bool = false,
 ) -> ArrayMesh:
-	var vertices := PackedVector3Array([
-		Vector3(-1, T, 0), Vector3(1, T, 0), Vector3(-1, -T, 0), Vector3(1, -T, 0),
-		Vector3(0, -1, T), Vector3(0, 1, T), Vector3(0, -1, -T), Vector3(0, 1, -T),
-		Vector3(T, 0, -1), Vector3(T, 0, 1), Vector3(-T, 0, -1), Vector3(-T, 0, 1),
-	])
-	for i in vertices.size():
-		vertices[i] = vertices[i].normalized()
-
-	var indices := PackedInt32Array([
-		0, 5, 11, 0, 1, 5, 0, 7, 1, 0, 10, 7, 0, 11, 10,
-		1, 9, 5, 5, 4, 11, 11, 2, 10, 10, 6, 7, 7, 8, 1,
-		3, 4, 9, 3, 2, 4, 3, 6, 2, 3, 8, 6, 3, 9, 8,
-		4, 5, 9, 2, 11, 4, 6, 10, 2, 8, 7, 6, 9, 1, 8,
-	])
-
-	indices = _subdivide(vertices, indices, subdivisions)
-	_displace(vertices, noise_seed, amplitude, frequency)
-	for i in vertices.size():
-		vertices[i] *= radius
+	var vertices := PackedVector3Array()
+	var indices := PackedInt32Array()
+	append_icosphere(
+		vertices, indices, Vector3.ZERO, noise_seed, radius, subdivisions, amplitude, frequency
+	)
 	return MeshUtils.build_mesh(vertices, indices, flat_shading)
