@@ -1,0 +1,10 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://bhtq0iyc1n5ch"]
+
+[ext_resource type="Texture2D" uid="uid://bjygtvpu04yly" path="res://addons/cosmo_tree_gen/demo/example_materials/textures/branchlets/branchlet_06.png" id="1_pj0uu"]
+
+[resource]
+transparency = 2
+alpha_scissor_threshold = 0.5
+alpha_antialiasing_mode = 0
+albedo_texture = ExtResource("1_pj0uu")
+texture_filter = 2
