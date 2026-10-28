@@ -47,6 +47,14 @@ const IcosphereGen := preload("./icosphere_gen.gd")
 		foliage = value
 		_regenerate()
 
+@export_group("Collision")
+@export var use_collision: bool = false:
+	set(value):
+		use_collision = value
+		_regenerate()
+@export_flags_3d_physics var collision_layer: int = 1
+@export_flags_3d_physics var collision_mask: int = 1
+
 
 func _init() -> void:
 	name = "CosmoTreeGen"
@@ -74,7 +82,7 @@ func _regenerate() -> void:
 
 
 func _clear_generated() -> void:
-	for node_name: String in ["Trunk", "Foliage"]:
+	for node_name: String in ["Trunk", "Foliage", "Collision"]:
 		var node := get_node_or_null(node_name)
 		if node:
 			remove_child(node)
@@ -115,6 +123,19 @@ func generate_tree() -> void:
 	MeshUtils.append_tube(
 		vertices, indices, trunk.points, trunk.radii, trunk_radial
 	)
+
+	if use_collision:
+		var static_body := StaticBody3D.new()
+		static_body.name = "Collision"
+		static_body.collision_layer = collision_layer
+		static_body.collision_mask = collision_mask
+		var col_shape := CollisionShape3D.new()
+		col_shape.name = "TrunkCollisionShape"
+		var convex_shape := ConvexPolygonShape3D.new()
+		convex_shape.points = vertices.duplicate()
+		col_shape.shape = convex_shape
+		static_body.add_child(col_shape)
+		add_child(static_body)
 
 	# Branches
 	var branches: Array[Branch] = []
