@@ -1,11 +1,12 @@
 # Copyright © 2026 CosmonautFrog - MIT License
 
-class_name IcosphereGen  # TODO: be used as `const IcosphereGen = preload(".../icosphere_gen.gd")`
 extends RefCounted
 ## Icosphere generator
 ## All the math's from:
 ## - https://blog.lslabs.dev/posts/generating_icosphere_with_code
 ## - https://schneide.blog/2016/07/15/generating-an-icosphere-in-c/
+
+const MeshUtils := preload("./mesh_utils.gd")
 
 ## (1 + sqrt(5)) / 2 - https://en.wikipedia.org/wiki/Golden_ratio
 const T: float = 1.618033988749895

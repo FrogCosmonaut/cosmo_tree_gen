@@ -1,6 +1,5 @@
 # Copyright © 2026 CosmonautFrog - MIT License
 
-class_name MeshUtils  # TODO: be used as `const MeshUtils = preload(".../mesh_utils.gd")`
 extends RefCounted
 ## Shared helpers
 

@@ -1,6 +1,5 @@
 # Copyright © 2026 CosmonautFrog - MIT License
 
-class_name TrunkGen  # TODO: be used as `const TrunkGen = preload(".../trunk_gen.gd")`
 extends RefCounted
 ## Trunk generator
 ## References:
@@ -8,6 +7,8 @@ extends RefCounted
 ## - Coding Train / Dan Shiffman: https://www.youtube.com/watch?v=MwLyeEWnMCY
 ## - https://algorithmicbotany.org/
 ## - https://en.wikipedia.org/wiki/L-system
+
+const Branch := preload("./branch.gd")
 
 const BASE_RADIAL_SEGMENTS: int = 6
 const BASE_HEIGHT_SEGMENTS: int = 3

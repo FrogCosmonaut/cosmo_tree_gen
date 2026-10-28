@@ -3,6 +3,12 @@
 @tool
 extends StaticBody3D
 
+const Branch := preload("../core/branch.gd")
+const TrunkGen := preload("../core/trunk_gen.gd")
+const MeshUtils := preload("../core/mesh_utils.gd")
+const TreeSkeleton := preload("../core/tree_skeleton.gd")
+const IcosphereGen := preload("../core/icosphere_gen.gd")
+
 @export_tool_button("Generate Tree") var gen: Callable = generate_tree
 @export var noise_seed: int = 42:
 	set(value):

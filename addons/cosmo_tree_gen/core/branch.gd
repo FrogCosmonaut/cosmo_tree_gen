@@ -1,6 +1,5 @@
 # Copyright © 2026 CosmonautFrog - MIT License
 
-class_name Branch  # TODO: be used as `const Branch = preload(".../branch.gd")`
 extends RefCounted
 ## A polyline definition, a radius per point.
 

@@ -1,8 +1,9 @@
 # Copyright © 2026 CosmonautFrog - MIT License
 
-class_name TreeSkeleton  # TODO: be used as `const TreeSkeleton = preload(".../tree_skeleton.gd")`
 extends RefCounted
 ## Grows child branches out of a parent Branch.
+
+const Branch := preload("./branch.gd")
 
 ## PI * (3 - sqrt(5)), ~137.5° - https://en.wikipedia.org/wiki/Golden_angle
 const GOLDEN_ANGLE: float = 2.399963229728653
