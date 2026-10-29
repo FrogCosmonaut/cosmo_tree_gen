@@ -15,6 +15,8 @@ const BASE_HEIGHT_SEGMENTS: int = 3
 
 
 static func generate_trunk(noise_seed: int, params: CosmoTrunkParams) -> Branch:
+	# TODO: extend the trunk below ground optionally
+	# TODO: add optional ground roots
 	var rng := RandomNumberGenerator.new()
 	rng.seed = noise_seed
 	var angle := rng.randf() * TAU

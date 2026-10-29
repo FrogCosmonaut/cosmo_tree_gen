@@ -116,6 +116,7 @@ static func append_icosphere(
 		indices.push_back(base + i)
 
 
+# TODO: currently unused
 static func generate_icosphere(
 	noise_seed: int = 0,
 	radius: float = 1.0,

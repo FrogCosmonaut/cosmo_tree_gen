@@ -4,13 +4,13 @@
 class_name CosmoFoliageParams
 extends Resource
 
-enum FoliageType {
+enum Type {
 	NONE,
 	ICOSPHERES,
 	LEAVES,
 }
 
-@export var type: FoliageType = FoliageType.ICOSPHERES:
+@export var type: Type = Type.ICOSPHERES:
 	set(value):
 		type = value
 		notify_property_list_changed()
@@ -78,7 +78,7 @@ func _validate_property(property: Dictionary) -> void:
 	var is_leaf := prop_name.begins_with("leaf_")
 	var is_icosphere := prop_name.begins_with("icosphere_")
 	if (
-		(is_leaf and type != FoliageType.LEAVES)
-		or (is_icosphere and type != FoliageType.ICOSPHERES)
+		(is_leaf and type != Type.LEAVES)
+		or (is_icosphere and type != Type.ICOSPHERES)
 	):
 		property.usage = PROPERTY_USAGE_NO_EDITOR

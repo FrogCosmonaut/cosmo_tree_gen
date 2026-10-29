@@ -8,15 +8,15 @@ extends Resource
 	set(value):
 		quality = value
 		emit_changed()
-@export_range(0.0, 25.0, 0.1) var height: float = 5.0:
+@export_range(0.1, 25.0, 0.1) var height: float = 4.5:
 	set(value):
 		height = value
 		emit_changed()
-@export_range(0.0, 5.0, 0.01) var radius_bottom: float = 0.35:
+@export_range(0.0, 2.0, 0.01) var radius_bottom: float = 0.35:
 	set(value):
 		radius_bottom = value
 		emit_changed()
-@export_range(0.0, 2.5, 0.01) var radius_top: float = 0.1:
+@export_range(0.0, 0.5, 0.01) var radius_top: float = 0.1:
 	set(value):
 		radius_top = value
 		emit_changed()
@@ -24,7 +24,7 @@ extends Resource
 	set(value):
 		lean = value
 		emit_changed()
-@export_range(0.0, 1.0) var wobble: float = 0.15:
+@export_range(0.0, 2.0) var wobble: float = 0.15:
 	set(value):
 		wobble = value
 		emit_changed()
