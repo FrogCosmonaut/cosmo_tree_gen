@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bxs6plxpy6inu"
-path.s3tc="res://.godot/imported/foliage.png-189b8f41b9b18caa228bce24d4463dd5.s3tc.ctex"
+uid="uid://bjygtvpu04yly"
+path.s3tc="res://.godot/imported/branchlet_06.png-a06870159b98308d1cd38ed6c0868e54.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://addons/cosmo_tree_gen/demo/example_materials/textures/foliage.png"
-dest_files=["res://.godot/imported/foliage.png-189b8f41b9b18caa228bce24d4463dd5.s3tc.ctex"]
+source_file="res://demo/example_textures/branchlet_06.png"
+dest_files=["res://.godot/imported/branchlet_06.png-a06870159b98308d1cd38ed6c0868e54.s3tc.ctex"]
 
 [params]
 
@@ -37,5 +37,5 @@ process/premult_alpha=false
 process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
-process/size_limit=0
+process/size_limit=256
 detect_3d/compress_to=0

@@ -1,0 +1,10 @@
+[gd_resource type="ShaderMaterial" format=3 uid="uid://cyy0xvd2uyh5r"]
+
+[ext_resource type="Shader" uid="uid://bfq8ep8l8jqps" path="res://demo/example_shaders/leaves.gdshader" id="1_leaves"]
+[ext_resource type="Texture2D" uid="uid://umkfokbv06cq" path="res://demo/example_textures/branchlet_05.png" id="1_ep1kh"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_leaves")
+shader_parameter/albedo_texture = ExtResource("1_ep1kh")
+shader_parameter/alpha_scissor_threshold = 0.5

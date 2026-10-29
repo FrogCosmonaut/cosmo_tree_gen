@@ -1,7 +1,7 @@
 [gd_resource type="ShaderMaterial" format=3 uid="uid://ud2fyw42vi52"]
 
-[ext_resource type="Texture2D" uid="uid://bfi4necapptje" path="res://addons/cosmo_tree_gen/demo/example_materials/textures/branchlets/branchlet_07.png" id="1_ec16d"]
-[ext_resource type="Shader" uid="uid://bfq8ep8l8jqps" path="res://addons/cosmo_tree_gen/shaders/leaves.gdshader" id="1_leaves"]
+[ext_resource type="Texture2D" uid="uid://bfi4necapptje" path="res://demo/example_textures/branchlet_07.png" id="1_ec16d"]
+[ext_resource type="Shader" uid="uid://bfq8ep8l8jqps" path="res://demo/example_shaders/leaves.gdshader" id="1_leaves"]
 
 [resource]
 render_priority = 0

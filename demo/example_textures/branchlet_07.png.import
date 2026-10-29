@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://umkfokbv06cq"
-path.s3tc="res://.godot/imported/branchlet_05.png-3f480b6d5064fcc8d4230143ec8c77db.s3tc.ctex"
+uid="uid://bfi4necapptje"
+path.s3tc="res://.godot/imported/branchlet_07.png-ab70f391ed2a0840907010de40242072.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://addons/cosmo_tree_gen/demo/example_materials/textures/branchlets/branchlet_05.png"
-dest_files=["res://.godot/imported/branchlet_05.png-3f480b6d5064fcc8d4230143ec8c77db.s3tc.ctex"]
+source_file="res://demo/example_textures/branchlet_07.png"
+dest_files=["res://.godot/imported/branchlet_07.png-ab70f391ed2a0840907010de40242072.s3tc.ctex"]
 
 [params]
 

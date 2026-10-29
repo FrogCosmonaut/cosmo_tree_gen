@@ -1,15 +1,15 @@
 [gd_scene format=3 uid="uid://c8fxt01sxw6ut"]
 
 [ext_resource type="Script" uid="uid://thf11ljosiks" path="res://addons/cosmo_tree_gen/core/cosmo_tree_gen.gd" id="1_cycnu"]
-[ext_resource type="Script" uid="uid://c0ggn4wsaa746" path="res://addons/cosmo_tree_gen/core/resources/trunk_params.gd" id="2_u2se3"]
-[ext_resource type="Script" uid="uid://ceh6ii6tlpph4" path="res://addons/cosmo_tree_gen/core/resources/branch_level.gd" id="3_cpj4b"]
-[ext_resource type="Script" uid="uid://1tt4by0vsl04" path="res://addons/cosmo_tree_gen/core/resources/foliage_params.gd" id="4_fxgjp"]
-[ext_resource type="Material" uid="uid://b7l8vw0qq0s25" path="res://addons/cosmo_tree_gen/demo/example_materials/bark.tres" id="5_cpj4b"]
-[ext_resource type="Material" uid="uid://ud2fyw42vi52" path="res://addons/cosmo_tree_gen/demo/example_materials/leaves_07.tres" id="6_1ld14"]
-[ext_resource type="Material" uid="uid://1aem886fag5n" path="res://addons/cosmo_tree_gen/demo/example_materials/foliage.tres" id="7_1ld14"]
-[ext_resource type="Texture2D" uid="uid://nf32p1bdtv1w" path="res://addons/cosmo_tree_gen/demo/example_materials/textures/bark.png" id="7_08yoa"]
-[ext_resource type="Texture2D" uid="uid://bfi4necapptje" path="res://addons/cosmo_tree_gen/demo/example_materials/textures/branchlets/branchlet_07.png" id="9_s6gsv"]
-[ext_resource type="Material" uid="uid://dm5as0s5uoju2" path="res://addons/cosmo_tree_gen/demo/example_materials/leaves_03.tres" id="10_fxgjp"]
+[ext_resource type="Script" uid="uid://c0ggn4wsaa746" path="res://addons/cosmo_tree_gen/resources/trunk_params.gd" id="2_u2se3"]
+[ext_resource type="Script" uid="uid://ceh6ii6tlpph4" path="res://addons/cosmo_tree_gen/resources/branch_level.gd" id="3_cpj4b"]
+[ext_resource type="Script" uid="uid://1tt4by0vsl04" path="res://addons/cosmo_tree_gen/resources/foliage_params.gd" id="4_fxgjp"]
+[ext_resource type="Material" uid="uid://b7l8vw0qq0s25" path="res://demo/example_materials/bark.tres" id="5_cpj4b"]
+[ext_resource type="Material" uid="uid://ud2fyw42vi52" path="res://demo/example_materials/leaves_07.tres" id="6_1ld14"]
+[ext_resource type="Material" uid="uid://1aem886fag5n" path="res://demo/example_materials/foliage.tres" id="7_1ld14"]
+[ext_resource type="Texture2D" uid="uid://nf32p1bdtv1w" path="res://demo/example_textures/bark.png" id="7_08yoa"]
+[ext_resource type="Texture2D" uid="uid://bfi4necapptje" path="res://demo/example_textures/branchlet_07.png" id="9_s6gsv"]
+[ext_resource type="Material" uid="uid://dm5as0s5uoju2" path="res://demo/example_materials/leaves_03.tres" id="10_fxgjp"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_u2se3"]
 sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
@@ -226,7 +226,7 @@ metadata/_custom_type_script = "uid://thf11ljosiks"
 
 [node name="CardLeaves" type="Node3D" parent="." unique_id=353850520]
 
-[node name="CosmoTreeGen" type="Node3D" parent="CardLeaves" unique_id=1925701942]
+[node name="Ash" type="Node3D" parent="CardLeaves" unique_id=1925701942]
 script = ExtResource("1_cycnu")
 trunk_params = SubResource("Resource_u2se3")
 branch_levels = Array[ExtResource("3_cpj4b")]([SubResource("Resource_np5pe"), SubResource("Resource_1ld14")])
