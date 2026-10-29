@@ -201,9 +201,10 @@ mesh = SubResource("PlaneMesh_nwdni")
 
 [node name="Icospheres" type="Node3D" parent="." unique_id=1538727374]
 
-[node name="LowPoly" type="Node3D" parent="Icospheres" unique_id=2106527168]
+[node name="LowPolyTree" type="Node3D" parent="Icospheres" unique_id=2106527168]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 0)
 script = ExtResource("1_cycnu")
+noise_seed = 1324960724
 trunk_params = SubResource("Resource_08yoa")
 branch_levels = Array[ExtResource("3_cpj4b")]([SubResource("Resource_fxgjp")])
 foliage_params = SubResource("Resource_jux6a")
@@ -214,11 +215,10 @@ metadata/_custom_type_script = "uid://thf11ljosiks"
 [node name="LowPolyBush" type="Node3D" parent="Icospheres" unique_id=1773419636]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.23986, 0, 1.4241031)
 script = ExtResource("1_cycnu")
-noise_seed = 44
-flat_shading = true
 trunk_params = SubResource("Resource_niwkb")
 branch_levels = Array[ExtResource("3_cpj4b")]([SubResource("Resource_febos")])
 foliage_params = SubResource("Resource_usong")
+flat_shading = true
 create_trunk = false
 trunk_material = ExtResource("5_cpj4b")
 foliage_material = ExtResource("7_1ld14")
@@ -246,8 +246,9 @@ foliage_material = SubResource("StandardMaterial3D_7cebg")
 metadata/_custom_type_script = "uid://thf11ljosiks"
 
 [node name="Bush" type="Node3D" parent="CardLeaves" unique_id=339446749]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.947, -0.1, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, -0.1, 0)
 script = ExtResource("1_cycnu")
+noise_seed = 1142438882
 trunk_params = SubResource("Resource_71ryk")
 branch_levels = Array[ExtResource("3_cpj4b")]([SubResource("Resource_kaepv")])
 foliage_params = SubResource("Resource_7cebg")

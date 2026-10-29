@@ -16,21 +16,22 @@ const TRUNK_NODE_NAME: String = "Trunk"
 const FOLIAGE_NODE_NAME: String = "Foliage"
 const COLLISION_NODE_NAME: String = "Collision"
 
-@export_tool_button("Generate tree") var gen: Callable = generate_tree
+@export_tool_button("Generate tree", "Reload")
+var gen: Callable = generate_tree
 @export var auto_generate: bool = true:
 	set(value):
 		auto_generate = value
 		if auto_generate:
 			_regenerate()
+
+@export_tool_button("Set random seed", "RandomNumberGenerator")
+var rseed: Callable = set_random_seed
 @export var noise_seed: int = 42:
 	set(value):
 		noise_seed = value
 		_regenerate()
-@export var flat_shading: bool = false:
-	set(value):
-		flat_shading = value
-		_regenerate()
 
+@export_category("Tree Parameters")
 @export var trunk_params: CosmoTrunkParams = CosmoTrunkParams.new():
 	set(value):
 		_swap_watch(trunk_params, value)
@@ -53,6 +54,10 @@ const COLLISION_NODE_NAME: String = "Collision"
 		_regenerate()
 
 @export_group("Meshes")
+@export var flat_shading: bool = false:
+	set(value):
+		flat_shading = value
+		_regenerate()
 @export var create_trunk: bool = true:
 	set(value):
 		create_trunk = value
@@ -326,6 +331,10 @@ func _generate_branches(
 	if branches.is_empty():
 		return []
 	return parents
+
+
+func set_random_seed() -> void:
+	noise_seed = randi_range(-2147483648, 2147483647)
 
 
 func generate_tree() -> void:
