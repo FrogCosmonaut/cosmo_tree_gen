@@ -16,7 +16,8 @@ static func _write_import_materials(path: String, state: GLTFState) -> Error:
 	var state_materials := state.get_materials()
 	for i in json_materials.size():
 		var material_path := state_materials[i].resource_path
-		# same "::" hack as presets, avoid built in materials
+		# creating a new Resource will create a resource_path like "...::xxxxx"
+		# this is a bit hacky, couldn't find another way
 		if material_path.is_empty() or material_path.contains("::"):
 			continue
 		materials[json_materials[i]["name"]] = {

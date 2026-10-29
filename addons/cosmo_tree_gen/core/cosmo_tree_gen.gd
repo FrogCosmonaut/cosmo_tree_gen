@@ -5,13 +5,14 @@
 class_name CosmoTreeGen
 extends Node3D
 
+signal generated
+
 const Branch := preload("./branch.gd")
 const TrunkGen := preload("./trunk_gen.gd")
 const MeshUtils := preload("./mesh_utils.gd")
 const TreeSkeleton := preload("./tree_skeleton.gd")
 const IcosphereGen := preload("./icosphere_gen.gd")
 const LeafGen := preload("./leaf_gen.gd")
-const SaveDialogUtils := preload("./save_dialog_utils.gd")
 
 const COMBINED_NODE_NAME: String = "CosmoTree"
 const TRUNK_NODE_NAME: String = "Trunk"
@@ -19,11 +20,6 @@ const TRUNK_SURFACE_NAME: String = "Bark"
 const FOLIAGE_NODE_NAME: String = "Foliage"
 const FOLIAGE_SURFACE_NAME: String = "Foliage"
 const COLLISION_NODE_NAME: String = "Collision"
-
-# TODO: add custom UI: add_control_to_container(CONTAINER_SPATIAL_EDITOR_MENU, ...)
-const Exporter := preload("./exporter.gd")
-@export_tool_button("Test export gLTF", "Save")
-var export: Callable = _save_gltf
 
 @export_tool_button("Generate tree", "Reload")
 var gen: Callable = generate_tree
@@ -33,8 +29,6 @@ var gen: Callable = generate_tree
 		if auto_generate:
 			_regenerate()
 
-@export_tool_button("Set random seed", "RandomNumberGenerator")
-var rseed: Callable = set_random_seed
 @export var noise_seed: int = 42:
 	set(value):
 		noise_seed = value
@@ -100,13 +94,6 @@ var trunk_material: Material: set = _set_trunk_material
 @export_custom(PROPERTY_HINT_RESOURCE_TYPE, "BaseMaterial3D,ShaderMaterial")
 var foliage_material: Material: set = _set_foliage_material
 
-@export_group("Presets")
-@export var load_preset: CosmoTreePreset: set = _set_preset
-@export_tool_button("Save preset", "Save") var save_preset: Callable = _save_preset 
-
-static var _last_gltf_saved_dir: String
-static var _last_preset_saved_dir: String
-
 var _applying_preset: bool = false
 
 
@@ -118,94 +105,6 @@ func _ready() -> void:
 	_swap_watch(null, trunk_params)
 	_swap_watch(null, foliage_params)
 	generate_tree()
-
-
-func _set_preset(value: CosmoTreePreset) -> void:
-	if value == null:
-		return
-
-	# hacky way to avoid "new" files to override everything with null
-	# creating a new Resource will create a resource_path like "...::xxxxx"
-	# anyway get_errors would prevent the override if the "::" thing changes
-	if value.resource_path.contains("::"):
-		push_warning("CosmoTreeGen: can't apply freshly created preset")
-		return
-
-	if not value.is_valid():
-		for err in value.get_errors():
-			push_warning(
-				"CosmoTreeGen: invalid preset '%s' - %s" % [value.resource_path, err]
-			)
-		return
-
-	# deep copy, `preset` not set on purpose, it's a one time action
-	var p := value.duplicate(true) as CosmoTreePreset
-
-	_applying_preset = true
-	trunk_params = p.trunk_params
-	branch_levels = p.branch_levels
-	foliage_params = p.foliage_params
-	combine_trunk_and_foliage = p.combine_trunk_and_foliage
-	flat_shading = p.flat_shading
-	create_trunk = p.create_trunk
-	create_foliage = p.create_foliage
-	trunk_material = p.trunk_material
-	foliage_material = p.foliage_material
-	_applying_preset = false
-
-	print("CosmoTreeGen: applied preset '%s'" % value.resource_path)
-	_regenerate()
-
-
-func _save_preset() -> void:
-	SaveDialogUtils.open_save_dialog(
-		"%s.tres" % String(name).to_snake_case(),
-		_write_preset,
-		_last_preset_saved_dir,
-		"*.tres",
-	)
-
-
-func _write_preset(path: String) -> void:
-	_last_preset_saved_dir = path.get_base_dir()
-
-	var new_preset := CosmoTreePreset.new()
-	new_preset.trunk_params = trunk_params
-	new_preset.branch_levels = branch_levels
-	new_preset.foliage_params = foliage_params
-	new_preset.combine_trunk_and_foliage = combine_trunk_and_foliage
-	new_preset.flat_shading = flat_shading
-	new_preset.create_trunk = create_trunk
-	new_preset.create_foliage = create_foliage
-	new_preset.trunk_material = trunk_material
-	new_preset.foliage_material = foliage_material
-	var err := ResourceSaver.save(new_preset, path)
-	if err != OK:
-		push_error(
-			"CosmoTreeGen: could not save preset to '%s' (%s)" % [path, error_string(err)]
-		)
-
-
-func _save_gltf(extension: String = "gltf") -> void:
-	SaveDialogUtils.open_save_dialog(
-		"%s.%s" % [String(name).to_snake_case(), extension],
-		_write_glft,
-		_last_gltf_saved_dir,
-		"*.%s" % extension,
-	)
-
-
-func _write_glft(path: String) -> void:
-	_last_gltf_saved_dir = path
-
-	var meshes: Array[MeshInstance3D]
-	for node_name: String in [COMBINED_NODE_NAME, TRUNK_NODE_NAME, FOLIAGE_NODE_NAME]:
-		var node := get_node_or_null(node_name) as MeshInstance3D
-		if node != null:
-			meshes.append(node)
-
-	var err := Exporter.export_gltf_instances(path, meshes)
-	Engine.get_singleton(&"EditorInterface").get_resource_filesystem().scan()
 
 
 func _set_trunk_material(value: Material) -> void:
@@ -371,6 +270,47 @@ func _generate_branches(
 	return parents
 
 
+func apply_preset(preset: CosmoTreePreset) -> void:
+	# deep copy, so editing the tree doesn't edit the preset file
+	var p := preset.duplicate(true) as CosmoTreePreset
+
+	_applying_preset = true
+	trunk_params = p.trunk_params
+	branch_levels = p.branch_levels
+	foliage_params = p.foliage_params
+	combine_trunk_and_foliage = p.combine_trunk_and_foliage
+	flat_shading = p.flat_shading
+	create_trunk = p.create_trunk
+	create_foliage = p.create_foliage
+	trunk_material = p.trunk_material
+	foliage_material = p.foliage_material
+	_applying_preset = false
+	_regenerate()
+
+
+func to_preset() -> CosmoTreePreset:
+	var preset := CosmoTreePreset.new()
+	preset.trunk_params = trunk_params
+	preset.branch_levels = branch_levels
+	preset.foliage_params = foliage_params
+	preset.combine_trunk_and_foliage = combine_trunk_and_foliage
+	preset.flat_shading = flat_shading
+	preset.create_trunk = create_trunk
+	preset.create_foliage = create_foliage
+	preset.trunk_material = trunk_material
+	preset.foliage_material = foliage_material
+	return preset
+
+
+func get_meshes() -> Array[MeshInstance3D]:
+	var meshes: Array[MeshInstance3D]
+	for node_name: String in [COMBINED_NODE_NAME, TRUNK_NODE_NAME, FOLIAGE_NODE_NAME]:
+		var node := get_node_or_null(node_name) as MeshInstance3D
+		if node != null:
+			meshes.append(node)
+	return meshes
+
+
 func set_random_seed() -> void:
 	noise_seed = randi_range(-2147483648, 2147483647)
 
@@ -380,6 +320,7 @@ func generate_tree() -> void:
 
 	if trunk_params == null:
 		push_warning("CosmoTreeGen: missing 'trunk_params'!")
+		generated.emit()
 		return
 
 	var trunk_radial: int = TrunkGen.BASE_RADIAL_SEGMENTS * trunk_params.quality
@@ -432,3 +373,4 @@ func generate_tree() -> void:
 
 	# Materials
 	_apply_materials()
+	generated.emit()

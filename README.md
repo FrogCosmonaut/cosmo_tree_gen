@@ -21,6 +21,7 @@ _100% Human made. No AI was or ever will be used in this project._
 - Automatic convex collision generation for the trunk. Optional with a toggle.
 	- Pending: optional foliage collision.
 - Save and load tree presets, saved as `CosmoTreePreset` resource.
+- GLB/gLTF export.
 
 ## Usage
 Add a `CosmoTreeGen` node.  
@@ -31,7 +32,6 @@ Can be used as is for quick prototyping. gLTF and glb export coming soon.
 
 ## TODOs
 - Support multiple trunks per tree.
-- GLB/gLTF mesh export.
 - Texture and UV scaling, custom texel density setter.
 - Auto LOD generation.
 	- Billboard impostor PNG generation.

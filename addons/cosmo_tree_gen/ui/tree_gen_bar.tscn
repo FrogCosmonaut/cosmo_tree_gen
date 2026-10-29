@@ -1,0 +1,45 @@
+[gd_scene format=3 uid="uid://dk4w00j460104"]
+
+[ext_resource type="Script" uid="uid://bareohor40a2f" path="res://addons/cosmo_tree_gen/ui/tree_gen_bar.gd" id="1_psid7"]
+
+[node name="TreeGenBar" type="HBoxContainer" unique_id=214483086]
+script = ExtResource("1_psid7")
+
+[node name="PresetMenu" type="MenuButton" parent="." unique_id=759787256]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Load a copy of a TreeGenParams preset into this tree."
+theme_type_variation = &"FlatMenuButton"
+text = "Preset"
+flat = false
+
+[node name="SeedButton" type="Button" parent="." unique_id=315177081]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Pick a new random tree_seed."
+theme_type_variation = &"FlatButton"
+text = "Seed"
+
+[node name="StatsLabel" type="Label" parent="." unique_id=2066327035]
+unique_name_in_owner = true
+self_modulate = Color(1, 1, 1, 0.6)
+layout_mode = 2
+
+[node name="ExportButton" type="Button" parent="." unique_id=1971317291]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Export this tree to a .gltf or .glb file."
+theme_type_variation = &"FlatButton"
+text = "Export glTF…"
+
+[node name="ExportDialog" type="EditorFileDialog" parent="." unique_id=1151347104]
+unique_name_in_owner = true
+oversampling_override = 1.0
+title = "Export Tree"
+access = 2
+filters = PackedStringArray("*.gltf ; glTF", "*.glb ; glTF Binary")
+
+[node name="PresetDialog" type="EditorFileDialog" parent="." unique_id=1600897391]
+unique_name_in_owner = true
+title = "Save Preset"
+filters = PackedStringArray("*.tres ; CosmoTreePreset")
