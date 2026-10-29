@@ -16,6 +16,22 @@ const TRUNK_NODE_NAME: String = "Trunk"
 const FOLIAGE_NODE_NAME: String = "Foliage"
 const COLLISION_NODE_NAME: String = "Collision"
 
+# TODO: add custom UI: add_control_to_container(CONTAINER_SPATIAL_EDITOR_MENU, ...)
+const Exporter := preload("./exporter.gd")
+@export_tool_button("Test export gLTF", "Save")
+var export: Callable = _export_gltf
+func _export_gltf() -> void:
+	var meshes: Array[ArrayMesh]
+	var trunk := get_node_or_null(TRUNK_NODE_NAME) as MeshInstance3D
+	if trunk != null:
+		meshes.append(trunk.mesh)
+	var foliage := get_node_or_null(FOLIAGE_NODE_NAME) as MeshInstance3D
+	if foliage != null:
+		meshes.append(foliage.mesh)
+	print(meshes)
+	print(Exporter.export_gltf("res://%s.gltf" % String(name).to_snake_case(), meshes))
+
+
 @export_tool_button("Generate tree", "Reload")
 var gen: Callable = generate_tree
 @export var auto_generate: bool = true:
