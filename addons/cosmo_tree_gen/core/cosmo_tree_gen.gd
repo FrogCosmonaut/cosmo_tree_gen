@@ -11,6 +11,7 @@ const MeshUtils := preload("./mesh_utils.gd")
 const TreeSkeleton := preload("./tree_skeleton.gd")
 const IcosphereGen := preload("./icosphere_gen.gd")
 const LeafGen := preload("./leaf_gen.gd")
+const SaveDialogUtils := preload("./save_dialog_utils.gd")
 
 const COMBINED_NODE_NAME: String = "CosmoTree"
 const TRUNK_NODE_NAME: String = "Trunk"
@@ -22,18 +23,7 @@ const COLLISION_NODE_NAME: String = "Collision"
 # TODO: add custom UI: add_control_to_container(CONTAINER_SPATIAL_EDITOR_MENU, ...)
 const Exporter := preload("./exporter.gd")
 @export_tool_button("Test export gLTF", "Save")
-var export: Callable = _export_gltf
-func _export_gltf() -> void:
-	var meshes: Array[ArrayMesh]
-	var trunk := get_node_or_null(TRUNK_NODE_NAME) as MeshInstance3D
-	if trunk != null:
-		meshes.append(trunk.mesh)
-	var foliage := get_node_or_null(FOLIAGE_NODE_NAME) as MeshInstance3D
-	if foliage != null:
-		meshes.append(foliage.mesh)
-	print(meshes)
-	print(Exporter.export_gltf("res://%s.gltf" % String(name).to_snake_case(), meshes))
-
+var export: Callable = _save_gltf
 
 @export_tool_button("Generate tree", "Reload")
 var gen: Callable = generate_tree
@@ -114,6 +104,7 @@ var foliage_material: Material: set = _set_foliage_material
 @export var load_preset: CosmoTreePreset: set = _set_preset
 @export_tool_button("Save preset", "Save") var save_preset: Callable = _save_preset 
 
+static var _last_gltf_saved_dir: String
 static var _last_preset_saved_dir: String
 
 var _applying_preset: bool = false
@@ -167,24 +158,12 @@ func _set_preset(value: CosmoTreePreset) -> void:
 
 
 func _save_preset() -> void:
-	# avoid "as EditorFileDialog" on purpose,
-	# otherwise would fail on an exported game
-	var dialog = ClassDB.instantiate(&"EditorFileDialog")
-	if not _last_preset_saved_dir.is_empty():
-		dialog.current_dir = _last_preset_saved_dir
-	dialog.file_mode = FileDialog.FILE_MODE_SAVE_FILE
-	dialog.access = FileDialog.ACCESS_RESOURCES
-	dialog.add_filter("*.tres", "Tree Preset")
-	dialog.current_file = "%s.tres" % String(name).to_snake_case()
-	dialog.file_selected.connect(_write_preset)
-	dialog.visibility_changed.connect(
-		func() -> void:
-			if not dialog.visible:
-				dialog.queue_free()
+	SaveDialogUtils.open_save_dialog(
+		"%s.tres" % String(name).to_snake_case(),
+		_write_preset,
+		_last_preset_saved_dir,
+		"*.tres",
 	)
-	var editor = Engine.get_singleton(&"EditorInterface")
-	editor.get_base_control().add_child(dialog)
-	dialog.popup_centered_ratio(0.5)
 
 
 func _write_preset(path: String) -> void:
@@ -205,6 +184,28 @@ func _write_preset(path: String) -> void:
 		push_error(
 			"CosmoTreeGen: could not save preset to '%s' (%s)" % [path, error_string(err)]
 		)
+
+
+func _save_gltf(extension: String = "gltf") -> void:
+	SaveDialogUtils.open_save_dialog(
+		"%s.%s" % [String(name).to_snake_case(), extension],
+		_write_glft,
+		_last_gltf_saved_dir,
+		"*.%s" % extension,
+	)
+
+
+func _write_glft(path: String) -> void:
+	_last_gltf_saved_dir = path
+
+	var meshes: Array[MeshInstance3D]
+	for node_name: String in [COMBINED_NODE_NAME, TRUNK_NODE_NAME, FOLIAGE_NODE_NAME]:
+		var node := get_node_or_null(node_name) as MeshInstance3D
+		if node != null:
+			meshes.append(node)
+
+	var err := Exporter.export_gltf_instances(path, meshes)
+	Engine.get_singleton(&"EditorInterface").get_resource_filesystem().scan()
 
 
 func _set_trunk_material(value: Material) -> void:
