@@ -5,8 +5,7 @@ extends HBoxContainer
 
 const Exporter := preload("../core/exporter.gd")
 
-# preset items use their index as id
-const SAVE_PRESET_ID: int = -2
+const SAVE_PRESET_ID: int = 0
 
 var tree: CosmoTreeGen: set = _set_tree
 
@@ -95,7 +94,8 @@ func _on_preset_menu_about_to_popup() -> void:
 	var popup := _preset_menu.get_popup()
 	popup.clear()
 	for i in _preset_paths.size():
-		popup.add_item(_preset_paths[i].get_file().get_basename().capitalize(), i)
+		var id := i + 1  # increment id by 1 so SAVE_PRESET_ID is always 0
+		popup.add_item(_preset_paths[i].get_file().get_basename().capitalize(), id)
 		popup.set_item_tooltip(i, _preset_paths[i])
 	if not _preset_paths.is_empty():
 		popup.add_separator()
@@ -107,7 +107,8 @@ func _on_preset_menu_id_pressed(id: int) -> void:
 		_preset_dialog.current_file = "%s.tres" % String(tree.name).to_snake_case()
 		_preset_dialog.popup_file_dialog()
 	else:
-		_apply_preset(_preset_paths[id])
+		_apply_preset(_preset_paths[id - 1])  # - 1 to keep sync with i + 1 in about_to_popup
+		# TODO: fix this shit
 
 
 func _on_preset_dialog_file_selected(path: String) -> void:
