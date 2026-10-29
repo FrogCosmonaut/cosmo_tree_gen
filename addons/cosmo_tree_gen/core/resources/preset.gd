@@ -11,6 +11,7 @@ extends Resource
 @export var trunk_material: Material
 @export var foliage_material: Material
 
+@export var combine_trunk_and_foliage: bool = true
 @export var flat_shading: bool = false
 @export var create_trunk: bool = true
 @export var create_foliage: bool = true

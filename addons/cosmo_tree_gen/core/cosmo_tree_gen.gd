@@ -12,8 +12,11 @@ const TreeSkeleton := preload("./tree_skeleton.gd")
 const IcosphereGen := preload("./icosphere_gen.gd")
 const LeafGen := preload("./leaf_gen.gd")
 
+const COMBINED_NODE_NAME: String = "CosmoTree"
 const TRUNK_NODE_NAME: String = "Trunk"
+const TRUNK_SURFACE_NAME: String = "Bark"
 const FOLIAGE_NODE_NAME: String = "Foliage"
+const FOLIAGE_SURFACE_NAME: String = "Foliage"
 const COLLISION_NODE_NAME: String = "Collision"
 
 # TODO: add custom UI: add_control_to_container(CONTAINER_SPATIAL_EDITOR_MENU, ...)
@@ -70,6 +73,10 @@ var rseed: Callable = set_random_seed
 		_regenerate()
 
 @export_group("Meshes")
+@export var combine_trunk_and_foliage: bool = true:
+	set(value):
+		combine_trunk_and_foliage = value
+		_regenerate()
 @export var flat_shading: bool = false:
 	set(value):
 		flat_shading = value
@@ -145,6 +152,7 @@ func _set_preset(value: CosmoTreePreset) -> void:
 	trunk_params = p.trunk_params
 	branch_levels = p.branch_levels
 	foliage_params = p.foliage_params
+	combine_trunk_and_foliage = p.combine_trunk_and_foliage
 	flat_shading = p.flat_shading
 	create_trunk = p.create_trunk
 	create_foliage = p.create_foliage
@@ -180,6 +188,7 @@ func _write_preset(path: String) -> void:
 	new_preset.trunk_params = trunk_params
 	new_preset.branch_levels = branch_levels
 	new_preset.foliage_params = foliage_params
+	new_preset.combine_trunk_and_foliage = combine_trunk_and_foliage
 	new_preset.flat_shading = flat_shading
 	new_preset.create_trunk = create_trunk
 	new_preset.create_foliage = create_foliage
@@ -194,25 +203,31 @@ func _write_preset(path: String) -> void:
 
 func _set_trunk_material(value: Material) -> void:
 	trunk_material = value
-
-	var trunk_mesh := get_node_or_null(TRUNK_NODE_NAME) as MeshInstance3D
-	if trunk_mesh == null:
-		return
-
-	trunk_mesh.mesh.surface_set_material(0, trunk_material)
+	_set_surface_material(TRUNK_SURFACE_NAME, trunk_material)
 
 
 func _set_foliage_material(value: Material) -> void:
 	foliage_material = value
 
-	var foliage_mesh := get_node_or_null(FOLIAGE_NODE_NAME) as MeshInstance3D
-	if foliage_mesh == null:
+	if not _set_surface_material(FOLIAGE_SURFACE_NAME, foliage_material):
 		return
 
-	foliage_mesh.mesh.surface_set_material(0, foliage_material)
 	if foliage_params.type == CosmoFoliageParams.Type.ICOSPHERES and foliage_material is StandardMaterial3D:
 		if not (foliage_material as StandardMaterial3D).uv1_triplanar:
 			push_warning("CosmoTreeGen: foliage_material should use UV1 triplanar!")
+
+
+func _set_surface_material(surface_name: String, material: Material) -> bool:
+	for node_name: String in [COMBINED_NODE_NAME, TRUNK_NODE_NAME, FOLIAGE_NODE_NAME]:
+		var mi := get_node_or_null(node_name) as MeshInstance3D
+		if mi == null:
+			continue
+		var mesh := mi.mesh as ArrayMesh
+		var idx := mesh.surface_find_by_name(surface_name)
+		if idx != -1:
+			mesh.surface_set_material(idx, material)
+			return true
+	return false
 
 
 func _apply_materials() -> void:
@@ -233,7 +248,7 @@ func _regenerate() -> void:
 
 
 func _clear_generated() -> void:
-	for node_name: String in [TRUNK_NODE_NAME, FOLIAGE_NODE_NAME, COLLISION_NODE_NAME]:
+	for node_name: String in [COMBINED_NODE_NAME, TRUNK_NODE_NAME, FOLIAGE_NODE_NAME, COLLISION_NODE_NAME]:
 		var node := get_node_or_null(node_name)
 		if node:
 			remove_child(node)
@@ -257,7 +272,7 @@ func _add_trunk_collision(trunk_vertices: PackedVector3Array) -> void:
 	add_child(static_body)
 
 
-func _add_icospheres(branches: Array[Branch]) -> void:
+func _create_icospheres_mesh(branches: Array[Branch]) -> ArrayMesh:
 	var vertices := PackedVector3Array()
 	var indices := PackedInt32Array()
 	var trunk := branches[0]
@@ -274,13 +289,10 @@ func _add_icospheres(branches: Array[Branch]) -> void:
 			foliage_params.icosphere_amplitude,
 			foliage_params.icosphere_frequency,
 		)
-	var foliage_mesh := MeshInstance3D.new()
-	foliage_mesh.name = FOLIAGE_NODE_NAME
-	foliage_mesh.mesh = MeshUtils.build_mesh(vertices, indices, flat_shading)
-	add_child(foliage_mesh)
+	return MeshUtils.build_mesh(vertices, indices, flat_shading)
 
 
-func _add_leaves(tips: Array[Branch]) -> void:
+func _create_leaves_mesh(tips: Array[Branch]) -> ArrayMesh:
 	var vertices := PackedVector3Array()
 	var indices := PackedInt32Array()
 	var uvs := PackedVector2Array()
@@ -302,11 +314,14 @@ func _add_leaves(tips: Array[Branch]) -> void:
 	arrays[Mesh.ARRAY_INDEX] = indices
 	var mesh := ArrayMesh.new()
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	return mesh
 
-	var foliage_mesh := MeshInstance3D.new()
-	foliage_mesh.name = FOLIAGE_NODE_NAME
-	foliage_mesh.mesh = mesh
-	add_child(foliage_mesh)
+
+func _add_mesh_instance(node_name: String, mesh: ArrayMesh) -> void:
+	var mi := MeshInstance3D.new()
+	mi.name = node_name
+	mi.mesh = mesh
+	add_child(mi)
 
 
 func _generate_trunk(
@@ -378,20 +393,35 @@ func generate_tree() -> void:
 	var tips: Array[Branch] = [trunk]
 	tips.append_array(_generate_branches(trunk, vertices, indices, uvs, branch_radial))
 
-	# Create trunk + branches mesh
+	var trunk_mesh: ArrayMesh
 	if create_trunk:
-		var trunk_mesh := MeshInstance3D.new()
-		trunk_mesh.name = TRUNK_NODE_NAME
-		trunk_mesh.mesh = MeshUtils.build_mesh(vertices, indices, flat_shading, uvs)
-		add_child(trunk_mesh)
+		trunk_mesh = MeshUtils.build_mesh(vertices, indices, flat_shading, uvs)
+		trunk_mesh.surface_set_name(0, TRUNK_SURFACE_NAME)
 
 	# Foliage
+	var foliage_mesh: ArrayMesh
 	if foliage_params != null and create_foliage:
 		# TODO: add different types of foliage, E.G.: dead trees, pines, etc...
 		match foliage_params.type:
 			CosmoFoliageParams.Type.NONE: pass  # TODO: maybe close branch caps?
-			CosmoFoliageParams.Type.ICOSPHERES: _add_icospheres(tips)
-			CosmoFoliageParams.Type.LEAVES: _add_leaves(tips)
+			CosmoFoliageParams.Type.ICOSPHERES: foliage_mesh = _create_icospheres_mesh(tips)
+			CosmoFoliageParams.Type.LEAVES: foliage_mesh = _create_leaves_mesh(tips)
+
+		if foliage_mesh != null:
+			foliage_mesh.surface_set_name(0, FOLIAGE_SURFACE_NAME)
+
+	# Create MeshInstance3Ds
+	if combine_trunk_and_foliage:
+		var parts: Array[ArrayMesh] = [trunk_mesh, foliage_mesh]
+		parts = parts.filter(func(x) -> bool: return x != null)
+		if not parts.is_empty():
+			var combined_mesh: ArrayMesh = MeshUtils.combine_meshes(parts)
+			_add_mesh_instance(COMBINED_NODE_NAME, combined_mesh)
+	else:
+		if trunk_mesh != null:
+			_add_mesh_instance(TRUNK_NODE_NAME, trunk_mesh)
+		if foliage_mesh != null:
+			_add_mesh_instance(FOLIAGE_NODE_NAME, foliage_mesh)
 
 	# Materials
 	_apply_materials()

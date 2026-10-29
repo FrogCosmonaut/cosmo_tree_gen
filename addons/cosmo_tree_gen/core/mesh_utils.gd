@@ -136,3 +136,20 @@ static func append_tube(
 			var c := a + ring
 			var d := c + 1
 			indices.append_array(PackedInt32Array([d, c, a, d, a, b]))
+
+
+static func combine_meshes(array_meshes: Array[ArrayMesh]) -> ArrayMesh:
+	# could use SurfaceTool but couldn't find out how to maintain separated materials
+	var out := ArrayMesh.new()
+
+	for am: ArrayMesh in array_meshes:
+		for i in range(am.get_surface_count()):
+			out.add_surface_from_arrays(
+				am.surface_get_primitive_type(i),
+				am.surface_get_arrays(i)
+			)
+			var new_idx := out.get_surface_count() - 1
+			out.surface_set_name(new_idx, am.surface_get_name(i))
+			out.surface_set_material(new_idx, am.surface_get_material(i))
+
+	return out
