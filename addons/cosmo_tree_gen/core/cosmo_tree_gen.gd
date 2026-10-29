@@ -114,6 +114,8 @@ var foliage_material: Material: set = _set_foliage_material
 @export var load_preset: CosmoTreePreset: set = _set_preset
 @export_tool_button("Save preset", "Save") var save_preset: Callable = _save_preset 
 
+static var _last_preset_saved_dir: String
+
 var _applying_preset: bool = false
 
 
@@ -168,6 +170,8 @@ func _save_preset() -> void:
 	# avoid "as EditorFileDialog" on purpose,
 	# otherwise would fail on an exported game
 	var dialog = ClassDB.instantiate(&"EditorFileDialog")
+	if not _last_preset_saved_dir.is_empty():
+		dialog.current_dir = _last_preset_saved_dir
 	dialog.file_mode = FileDialog.FILE_MODE_SAVE_FILE
 	dialog.access = FileDialog.ACCESS_RESOURCES
 	dialog.add_filter("*.tres", "Tree Preset")
@@ -184,6 +188,8 @@ func _save_preset() -> void:
 
 
 func _write_preset(path: String) -> void:
+	_last_preset_saved_dir = path.get_base_dir()
+
 	var new_preset := CosmoTreePreset.new()
 	new_preset.trunk_params = trunk_params
 	new_preset.branch_levels = branch_levels
