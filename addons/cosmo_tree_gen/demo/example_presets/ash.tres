@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="CosmoTreePreset" format=3 uid="uid://dud0uolkbfkt"]
+
+[ext_resource type="Script" uid="uid://ceh6ii6tlpph4" path="res://addons/cosmo_tree_gen/core/resources/branch_level.gd" id="1_jxche"]
+[ext_resource type="Script" uid="uid://dlp11kr4f76j3" path="res://addons/cosmo_tree_gen/core/resources/preset.gd" id="2_8v2kx"]
+[ext_resource type="Material" uid="uid://deodinjmuohgl" path="res://addons/cosmo_tree_gen/demo/example_materials/leaves_01.tres" id="2_jvw37"]
+[ext_resource type="Script" uid="uid://1tt4by0vsl04" path="res://addons/cosmo_tree_gen/core/resources/foliage_params.gd" id="2_qgodp"]
+[ext_resource type="Script" uid="uid://c0ggn4wsaa746" path="res://addons/cosmo_tree_gen/core/resources/trunk_params.gd" id="3_8v2kx"]
+[ext_resource type="Material" uid="uid://b7l8vw0qq0s25" path="res://addons/cosmo_tree_gen/demo/example_materials/bark.tres" id="5_v27nv"]
+
+[sub_resource type="Resource" id="Resource_jvw37"]
+script = ExtResource("1_jxche")
+metadata/_custom_type_script = "uid://ceh6ii6tlpph4"
+
+[sub_resource type="Resource" id="Resource_v27nv"]
+script = ExtResource("1_jxche")
+start = 0.052
+end = 1.0
+angle = 84.266
+length = 0.5
+metadata/_custom_type_script = "uid://ceh6ii6tlpph4"
+
+[sub_resource type="Resource" id="Resource_qu2v1"]
+script = ExtResource("2_qgodp")
+type = 2
+leaf_count = 14
+leaf_size = 0.5
+
+[sub_resource type="Resource" id="Resource_7u0fo"]
+script = ExtResource("3_8v2kx")
+height = 5.0
+radius_bottom = 0.2
+radius_top = 0.01
+
+[resource]
+script = ExtResource("2_8v2kx")
+trunk_params = SubResource("Resource_7u0fo")
+branch_levels = Array[ExtResource("1_jxche")]([SubResource("Resource_jvw37"), SubResource("Resource_v27nv")])
+foliage_params = SubResource("Resource_qu2v1")
+trunk_material = ExtResource("5_v27nv")
+foliage_material = ExtResource("2_jvw37")
+metadata/_custom_type_script = "uid://dlp11kr4f76j3"

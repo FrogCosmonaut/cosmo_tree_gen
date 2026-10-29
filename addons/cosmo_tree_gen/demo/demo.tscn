@@ -119,7 +119,7 @@ type = 2
 leaf_count = 14
 leaf_size = 0.5
 
-[sub_resource type="Resource" id="Resource_5jeb0"]
+[sub_resource type="Resource" id="Resource_s6gsv"]
 script = ExtResource("2_u2se3")
 height = 4.0
 radius_bottom = 0.2
@@ -127,7 +127,7 @@ radius_top = 0.01
 lean = 0.473
 wobble = 0.0
 
-[sub_resource type="Resource" id="Resource_k1kaw"]
+[sub_resource type="Resource" id="Resource_5jeb0"]
 script = ExtResource("3_cpj4b")
 count = 20
 start = 0.519
@@ -144,11 +144,11 @@ type = 2
 leaf_size = 0.31
 leaf_start = 0.0
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fxgjp"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_k1kaw"]
 albedo_texture = ExtResource("7_08yoa")
 texture_filter = 0
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_08yoa"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7cebg"]
 transparency = 2
 alpha_scissor_threshold = 0.4
 alpha_antialiasing_mode = 0
@@ -238,11 +238,11 @@ metadata/_custom_type_script = "uid://thf11ljosiks"
 [node name="Pine" type="Node3D" parent="CardLeaves" unique_id=370071658]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.905, 0, 0)
 script = ExtResource("1_cycnu")
-trunk_params = SubResource("Resource_5jeb0")
-branch_levels = Array[ExtResource("3_cpj4b")]([SubResource("Resource_k1kaw")])
+trunk_params = SubResource("Resource_s6gsv")
+branch_levels = Array[ExtResource("3_cpj4b")]([SubResource("Resource_5jeb0")])
 foliage_params = SubResource("Resource_rxyxx")
-trunk_material = SubResource("StandardMaterial3D_fxgjp")
-foliage_material = SubResource("StandardMaterial3D_08yoa")
+trunk_material = SubResource("StandardMaterial3D_k1kaw")
+foliage_material = SubResource("StandardMaterial3D_7cebg")
 metadata/_custom_type_script = "uid://thf11ljosiks"
 
 [node name="Bush" type="Node3D" parent="CardLeaves" unique_id=339446749]

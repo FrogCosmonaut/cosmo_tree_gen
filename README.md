@@ -20,6 +20,7 @@ _100% Human made. No AI was or ever will be used in this project._
 	- Leaves, configurable amount and double sided cards.
 - Automatic convex collision generation for the trunk. Optional with a toggle.
 	- Pending: optional foliage collision.
+- Save and load tree presets, saved as `CosmoTreePreset` resource.
 
 ## Usage
 Add a `CosmoTreeGen` node.  
@@ -34,7 +35,6 @@ Can be used as is for quick prototyping. gLTF and glb export coming soon.
 - Texture and UV scaling, custom texel density setter.
 - Auto LOD generation.
 	- Billboard impostor PNG generation.
-- Tree type presets.
 - More low-poly foliage variations. (Pine, Boxes)
 - Wind shader.
 - Graph editor. (Probably not needed)

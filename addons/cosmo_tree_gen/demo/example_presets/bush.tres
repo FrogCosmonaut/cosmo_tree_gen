@@ -1,0 +1,46 @@
+[gd_resource type="Resource" script_class="CosmoTreePreset" format=3 uid="uid://cqld5e81q5y3w"]
+
+[ext_resource type="Script" uid="uid://ceh6ii6tlpph4" path="res://addons/cosmo_tree_gen/core/resources/branch_level.gd" id="1_wvenm"]
+[ext_resource type="Material" uid="uid://dm5as0s5uoju2" path="res://addons/cosmo_tree_gen/demo/example_materials/leaves_03.tres" id="2_4dugm"]
+[ext_resource type="Script" uid="uid://dlp11kr4f76j3" path="res://addons/cosmo_tree_gen/core/resources/preset.gd" id="2_wnbv0"]
+[ext_resource type="Script" uid="uid://1tt4by0vsl04" path="res://addons/cosmo_tree_gen/core/resources/foliage_params.gd" id="3_c2y3n"]
+[ext_resource type="Material" uid="uid://b7l8vw0qq0s25" path="res://addons/cosmo_tree_gen/demo/example_materials/bark.tres" id="5_7xtt4"]
+[ext_resource type="Script" uid="uid://c0ggn4wsaa746" path="res://addons/cosmo_tree_gen/core/resources/trunk_params.gd" id="6_git01"]
+
+[sub_resource type="Resource" id="Resource_kaepv"]
+script = ExtResource("1_wvenm")
+count = 10
+start = 0.0
+end = 1.0
+angle = 52.844
+length = 0.461
+radius = 1.0
+segments = 1
+gnarl = 0.0
+metadata/_custom_type_script = "uid://ceh6ii6tlpph4"
+
+[sub_resource type="Resource" id="Resource_7cebg"]
+script = ExtResource("3_c2y3n")
+type = 2
+leaf_count = 14
+leaf_size = 0.76
+leaf_size_variance = 0.322
+leaf_start = 0.0
+leaf_inner_ao = 0.0
+
+[sub_resource type="Resource" id="Resource_71ryk"]
+script = ExtResource("6_git01")
+height = 0.2
+radius_bottom = 0.04
+radius_top = 0.0
+lean = 0.0
+wobble = 0.0
+
+[resource]
+script = ExtResource("2_wnbv0")
+trunk_params = SubResource("Resource_71ryk")
+branch_levels = Array[ExtResource("1_wvenm")]([SubResource("Resource_kaepv")])
+foliage_params = SubResource("Resource_7cebg")
+trunk_material = ExtResource("5_7xtt4")
+foliage_material = ExtResource("2_4dugm")
+create_trunk = false

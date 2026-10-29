@@ -16,11 +16,11 @@ const TRUNK_NODE_NAME: String = "Trunk"
 const FOLIAGE_NODE_NAME: String = "Foliage"
 const COLLISION_NODE_NAME: String = "Collision"
 
-@export_tool_button("Generate Tree") var gen: Callable = generate_tree
-@export var auto_update: bool = true:
+@export_tool_button("Generate tree") var gen: Callable = generate_tree
+@export var auto_generate: bool = true:
 	set(value):
-		auto_update = value
-		if auto_update:
+		auto_generate = value
+		if auto_generate:
 			_regenerate()
 @export var noise_seed: int = 42:
 	set(value):
@@ -82,6 +82,12 @@ var trunk_material: Material: set = _set_trunk_material
 @export_custom(PROPERTY_HINT_RESOURCE_TYPE, "BaseMaterial3D,ShaderMaterial")
 var foliage_material: Material: set = _set_foliage_material
 
+@export_group("Presets")
+@export var load_preset: CosmoTreePreset: set = _set_preset
+@export_tool_button("Save preset", "Save") var save_preset: Callable = _save_preset 
+
+var _applying_preset: bool = false
+
 
 func _init() -> void:
 	name = "CosmoTreeGen"
@@ -91,6 +97,78 @@ func _ready() -> void:
 	_swap_watch(null, trunk_params)
 	_swap_watch(null, foliage_params)
 	generate_tree()
+
+
+func _set_preset(value: CosmoTreePreset) -> void:
+	if value == null:
+		return
+
+	# hacky way to avoid "new" files to override everything with null
+	# creating a new Resource will create a resource_path like "...::xxxxx"
+	# anyway get_errors would prevent the override if the "::" thing changes
+	if value.resource_path.contains("::"):
+		push_warning("CosmoTreeGen: can't apply freshly created preset")
+		return
+
+	if not value.is_valid():
+		for err in value.get_errors():
+			push_warning(
+				"CosmoTreeGen: invalid preset '%s' - %s" % [value.resource_path, err]
+			)
+		return
+
+	# deep copy, `preset` not set on purpose, it's a one time action
+	var p := value.duplicate(true) as CosmoTreePreset
+
+	_applying_preset = true
+	trunk_params = p.trunk_params
+	branch_levels = p.branch_levels
+	foliage_params = p.foliage_params
+	flat_shading = p.flat_shading
+	create_trunk = p.create_trunk
+	create_foliage = p.create_foliage
+	trunk_material = p.trunk_material
+	foliage_material = p.foliage_material
+	_applying_preset = false
+
+	print("CosmoTreeGen: applied preset '%s'" % value.resource_path)
+	_regenerate()
+
+
+func _save_preset() -> void:
+	# avoid "as EditorFileDialog" on purpose,
+	# otherwise would fail on an exported game
+	var dialog = ClassDB.instantiate(&"EditorFileDialog")
+	dialog.file_mode = FileDialog.FILE_MODE_SAVE_FILE
+	dialog.access = FileDialog.ACCESS_RESOURCES
+	dialog.add_filter("*.tres", "Tree Preset")
+	dialog.current_file = "%s.tres" % String(name).to_snake_case()
+	dialog.file_selected.connect(_write_preset)
+	dialog.visibility_changed.connect(
+		func() -> void:
+			if not dialog.visible:
+				dialog.queue_free()
+	)
+	var editor = Engine.get_singleton(&"EditorInterface")
+	editor.get_base_control().add_child(dialog)
+	dialog.popup_centered_ratio(0.5)
+
+
+func _write_preset(path: String) -> void:
+	var new_preset := CosmoTreePreset.new()
+	new_preset.trunk_params = trunk_params
+	new_preset.branch_levels = branch_levels
+	new_preset.foliage_params = foliage_params
+	new_preset.flat_shading = flat_shading
+	new_preset.create_trunk = create_trunk
+	new_preset.create_foliage = create_foliage
+	new_preset.trunk_material = trunk_material
+	new_preset.foliage_material = foliage_material
+	var err := ResourceSaver.save(new_preset, path)
+	if err != OK:
+		push_error(
+			"CosmoTreeGen: could not save preset to '%s' (%s)" % [path, error_string(err)]
+		)
 
 
 func _set_trunk_material(value: Material) -> void:
@@ -129,7 +207,7 @@ func _swap_watch(old: Resource, new: Resource) -> void:
 
 
 func _regenerate() -> void:
-	if is_node_ready() and auto_update:
+	if is_node_ready() and auto_generate and not _applying_preset:
 		generate_tree()
 
 
