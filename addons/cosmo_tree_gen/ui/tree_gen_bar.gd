@@ -5,8 +5,6 @@ extends HBoxContainer
 
 const Exporter := preload("../core/exporter.gd")
 
-const SAVE_PRESET_ID: int = 0
-
 var tree: CosmoTreeGen: set = _set_tree
 
 var _preset_paths := PackedStringArray()
@@ -27,7 +25,7 @@ func _ready() -> void:
 	_seed_button.icon = theme.get_icon(&"RandomNumberGenerator", &"EditorIcons")
 	_export_button.icon = theme.get_icon(&"Save", &"EditorIcons")
 	_preset_menu.about_to_popup.connect(_on_preset_menu_about_to_popup)
-	_preset_menu.get_popup().id_pressed.connect(_on_preset_menu_id_pressed)
+	_preset_menu.get_popup().index_pressed.connect(_on_preset_menu_index_pressed)
 	_seed_button.pressed.connect(_on_seed_button_pressed)
 	_export_button.pressed.connect(_on_export_button_pressed)
 	_export_dialog.file_selected.connect(_on_export_dialog_file_selected)
@@ -93,22 +91,24 @@ func _on_preset_menu_about_to_popup() -> void:
 
 	var popup := _preset_menu.get_popup()
 	popup.clear()
-	for i in _preset_paths.size():
-		var id := i + 1  # increment id by 1 so SAVE_PRESET_ID is always 0
-		popup.add_item(_preset_paths[i].get_file().get_basename().capitalize(), id)
-		popup.set_item_tooltip(i, _preset_paths[i])
+	for path: String in _preset_paths:
+		popup.add_item(path.get_file().get_basename().capitalize())
+		var idx := popup.item_count - 1
+		popup.set_item_tooltip(idx, path)
+		popup.set_item_metadata(idx, path)
 	if not _preset_paths.is_empty():
 		popup.add_separator()
-	popup.add_item("Save Preset…", SAVE_PRESET_ID)
+	popup.add_item("Save Preset…")
 
 
-func _on_preset_menu_id_pressed(id: int) -> void:
-	if id == SAVE_PRESET_ID:
+func _on_preset_menu_index_pressed(index: int) -> void:
+	var metadata: Variant = _preset_menu.get_popup().get_item_metadata(index)
+	if metadata is String:
+		var path: String = metadata as String
+		_apply_preset(path)
+	else:
 		_preset_dialog.current_file = "%s.tres" % String(tree.name).to_snake_case()
 		_preset_dialog.popup_file_dialog()
-	else:
-		_apply_preset(_preset_paths[id - 1])  # - 1 to keep sync with i + 1 in about_to_popup
-		# TODO: fix this shit
 
 
 func _on_preset_dialog_file_selected(path: String) -> void:
