@@ -1,14 +1,14 @@
 # Cosmo Tree Gen
-<img width="757" height="526" alt="image" src="https://github.com/user-attachments/assets/b05ba419-0642-4415-9e9c-c6571a31925a" />
+![Cosmo Tree Gen](.github/images/render.png)
 
-Work in progress!  
-
-Godot 4.4+ required. Developed in 4.6.2.stable.  
-Procedural low-poly tree generator.  
+Procedural tree generator. Work in progress!  
 
 Mainly inspired by Dan Shiffman and EZTree.  
 
 _100% Human made. No AI was or ever will be used in this project._  
+
+## Requirements
+Godot 4.4+ required. Developed in 4.6.2.stable.  
 
 ## Features
 - Procedural tree generator with configurable branch levels.
@@ -36,7 +36,6 @@ Can be used as is for quick prototyping. gLTF and glb export coming soon.
 - Auto LOD generation.
 	- Billboard impostor PNG generation.
 - More low-poly foliage variations. (Pine, Boxes)
-- Wind shader.
 - Graph editor. (Probably not needed)
 
 ## References used
