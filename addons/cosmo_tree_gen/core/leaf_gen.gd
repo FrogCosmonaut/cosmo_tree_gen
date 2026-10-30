@@ -60,6 +60,17 @@ static func append_leaves(
 			var double_right := up.cross(right).normalized() * size
 			_append_quad(vertices, indices, uvs, origin, up, double_right)
 
+	# terminal leaf, after the loop so it doesn't reshuffle the other leaves
+	if params.leaf_tip:
+		var tangent := branch.tangent_at(1.0)
+		var helper := Vector3.RIGHT if absf(tangent.y) > 0.9 else Vector3.UP
+		var size := params.leaf_size * (1.0 + rng.randf_range(-1.0, 1.0) * params.leaf_size_variance)
+		var up := tangent * size
+		var right := tangent.cross(helper).normalized().rotated(tangent, rng.randf() * TAU) * size
+		_append_quad(vertices, indices, uvs, branch.tip(), up, right)
+		if params.leaf_double:
+			_append_quad(vertices, indices, uvs, branch.tip(), up, up.cross(right).normalized() * size)
+
 
 ## Blends the card normals towards an ellipsoid around all the leaves, so
 ## is lit as one rounded volume (like EZ-Tree "rounded normals", but for the whole thing).

@@ -43,6 +43,10 @@ enum Type {
 	set(value):
 		leaf_count = value
 		emit_changed()
+@export var leaf_tip: bool = false:
+	set(value):
+		leaf_tip = value
+		emit_changed()
 @export_range(0.05, 3.0, 0.01) var leaf_size: float = 0.6:
 	set(value):
 		leaf_size = value
