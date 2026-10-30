@@ -9,6 +9,18 @@ const Branch := preload("./branch.gd")
 const TreeSkeleton := preload("./tree_skeleton.gd")
 
 
+static func _get_leaf_size_at(
+	rng: RandomNumberGenerator,
+	params: CosmoFoliageParams,
+	t: float,
+	length_influence: float,
+) -> float:
+	var size := params.leaf_size * length_influence * (1.0 + rng.randf_range(-1.0, 1.0) * params.leaf_size_variance)
+	if params.leaf_size_curve != null and params.leaf_size_curve.point_count > 0:
+		size *= params.leaf_size_curve.sample(t)
+	return size
+
+
 static func _append_quad(
 	vertices: PackedVector3Array,
 	indices: PackedInt32Array,
@@ -35,6 +47,7 @@ static func append_leaves(
 	uvs: PackedVector2Array,
 	branch: Branch,
 	params: CosmoFoliageParams,
+	length_influence: float = 1.0,
 ) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash([branch.branch_seed, "ayylmao"])
@@ -49,12 +62,15 @@ static func append_leaves(
 		var azimuth := k * TreeSkeleton.GOLDEN_ANGLE + rng.randf_range(-0.3, 0.3)
 		var side := tangent.cross(helper).normalized().rotated(tangent, azimuth)
 
-		var size := params.leaf_size * (1.0 + rng.randf_range(-1.0, 1.0) * params.leaf_size_variance)
-		var up := (tangent * cos(tilt) + side * sin(tilt)) * size
-		var right := tangent.cross(side).normalized() * size
-		# Both drawn always so toggling leaf_double doesn't reshuffle the other leaves
+		var size := _get_leaf_size_at(rng, params, t, length_influence)
+		# both drawn always so toggling leaf_double or skipping a leaf doesn't reshuffle the other leaves
 		var variant := rng.randf()
 		var double_variant := rng.randf()
+		if size <= 0.0:
+			continue
+
+		var up := (tangent * cos(tilt) + side * sin(tilt)) * size
+		var right := tangent.cross(side).normalized() * size
 		_append_quad(vertices, indices, uvs, origin, up, right)
 		if params.leaf_double:
 			var double_right := up.cross(right).normalized() * size
@@ -64,7 +80,10 @@ static func append_leaves(
 	if params.leaf_tip:
 		var tangent := branch.tangent_at(1.0)
 		var helper := Vector3.RIGHT if absf(tangent.y) > 0.9 else Vector3.UP
-		var size := params.leaf_size * (1.0 + rng.randf_range(-1.0, 1.0) * params.leaf_size_variance)
+		var size := _get_leaf_size_at(rng, params, 1.0, length_influence)
+		if size <= 0.0:
+			return
+
 		var up := tangent * size
 		var right := tangent.cross(helper).normalized().rotated(tangent, rng.randf() * TAU) * size
 		_append_quad(vertices, indices, uvs, branch.tip(), up, right)

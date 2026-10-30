@@ -4,7 +4,7 @@
 class_name CosmoBranchLevel
 extends Resource
 
-@export_range(0, 20) var count: int = 6:
+@export_range(0, 60) var count: int = 6:
 	set(value):
 		count = value
 		emit_changed()
@@ -27,6 +27,14 @@ extends Resource
 @export_range(0.05, 1.0) var length: float = 0.4:
 	set(value):
 		length = value
+		emit_changed()
+@export var length_curve: Curve:
+	set(value):
+		if length_curve != null:
+			length_curve.changed.disconnect(emit_changed)
+		length_curve = value
+		if length_curve != null:
+			length_curve.changed.connect(emit_changed)
 		emit_changed()
 @export_range(0.1, 1.0) var radius: float = 0.6:
 	set(value):

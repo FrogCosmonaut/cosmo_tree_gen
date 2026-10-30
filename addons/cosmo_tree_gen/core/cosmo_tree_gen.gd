@@ -204,8 +204,16 @@ func _create_leaves_mesh(tips: Array[Branch]) -> ArrayMesh:
 	var uvs := PackedVector2Array()
 	# tips[0] is the trunk, only gets leaves when there are no branches
 	var first := 1 if tips.size() > 1 else 0
+	var longest := 0.0
 	for i in range(first, tips.size()):
-		LeafGen.append_leaves(vertices, indices, uvs, tips[i], foliage_params)
+		longest = maxf(longest, tips[i].get_length())
+	for i in range(first, tips.size()):
+		var length_ratio := tips[i].get_length() / longest
+		var length_influence := lerpf(1.0, length_ratio, foliage_params.leaf_length_influence)
+		LeafGen.append_leaves(vertices, indices, uvs, tips[i], foliage_params, length_influence)
+
+	if vertices.is_empty():
+		return null
 
 	var normals := PackedVector3Array()
 	var colors := PackedColorArray()

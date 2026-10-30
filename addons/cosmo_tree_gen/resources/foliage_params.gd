@@ -51,6 +51,18 @@ enum Type {
 	set(value):
 		leaf_size = value
 		emit_changed()
+@export var leaf_size_curve: Curve:
+	set(value):
+		if leaf_size_curve != null:
+			leaf_size_curve.changed.disconnect(emit_changed)
+		leaf_size_curve = value
+		if leaf_size_curve != null:
+			leaf_size_curve.changed.connect(emit_changed)
+		emit_changed()
+@export_range(0.0, 1.0) var leaf_length_influence: float = 0.0:
+	set(value):
+		leaf_length_influence = value
+		emit_changed()
 @export_range(0.0, 0.9) var leaf_size_variance: float = 0.3:
 	set(value):
 		leaf_size_variance = value

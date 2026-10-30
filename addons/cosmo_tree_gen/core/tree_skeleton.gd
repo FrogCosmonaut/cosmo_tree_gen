@@ -48,7 +48,13 @@ static func grow_branches(parent: Branch, level: CosmoBranchLevel) -> Array[Bran
 		var dir := tangent * cos(tilt) + side * sin(tilt)
 		var r0 := parent_radius * minf(level.radius, 0.8)
 
-		var branch := _grow_branch(level, rng, origin, dir, r0, step)
+		var branch_step := step
+		if level.length_curve != null and level.length_curve.point_count > 0:
+			branch_step *= level.length_curve.sample(t)
+		if branch_step <= 0.0:
+			continue
+
+		var branch := _grow_branch(level, rng, origin, dir, r0, branch_step)
 		branch.branch_seed = branch_seed
 		branch.level = parent.level + 1
 		branches.append(branch)
