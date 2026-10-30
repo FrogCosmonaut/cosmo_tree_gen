@@ -7,32 +7,37 @@
 [ext_resource type="Material" uid="uid://b7l8vw0qq0s25" path="res://demo/example_materials/bark.tres" id="5_telg4"]
 [ext_resource type="Script" uid="uid://c0ggn4wsaa746" path="res://addons/cosmo_tree_gen/resources/trunk_params.gd" id="6_8qhoc"]
 
-[sub_resource type="Resource" id="Resource_fxgjp"]
+[sub_resource type="Resource" id="Resource_f73r4"]
 script = ExtResource("1_cej6h")
-count = 3
-start = 0.194
-end = 0.698
-angle = 73.119
-length = 0.274
-radius = 0.657
-segments = 1
-up_force = 0.33499999999999996
+count = 5
+start = 0.373
+end = 0.726
+angle = 59.082
+length = 0.235
+radius = 0.8099999999999999
+segments = 2
+gnarl = 0.055
+up_force = 0.18500000000000005
 metadata/_custom_type_script = "uid://ceh6ii6tlpph4"
 
-[sub_resource type="Resource" id="Resource_jux6a"]
+[sub_resource type="Resource" id="Resource_hycpn"]
 script = ExtResource("3_8c5pk")
+icosphere_subdivisions = 2
+icosphere_amplitude = 0.42
+icosphere_frequency = 1.92
 
-[sub_resource type="Resource" id="Resource_08yoa"]
+[sub_resource type="Resource" id="Resource_5t1n4"]
 script = ExtResource("6_8qhoc")
-height = 4.0
+height = 6.0
 radius_bottom = 0.25
-lean = 0.721
+lean = 0.644
+wobble = 0.244
 metadata/_custom_type_script = "uid://c0ggn4wsaa746"
 
 [resource]
 script = ExtResource("4_pi6et")
-trunk_params = SubResource("Resource_08yoa")
-branch_levels = Array[ExtResource("1_cej6h")]([SubResource("Resource_fxgjp")])
-foliage_params = SubResource("Resource_jux6a")
+trunk_params = SubResource("Resource_5t1n4")
+branch_levels = Array[ExtResource("1_cej6h")]([SubResource("Resource_f73r4")])
+foliage_params = SubResource("Resource_hycpn")
 trunk_material = ExtResource("5_telg4")
 foliage_material = ExtResource("2_oxfop")
