@@ -12,11 +12,10 @@ const Branch := preload("./branch.gd")
 
 const BASE_RADIAL_SEGMENTS: int = 6
 const BASE_HEIGHT_SEGMENTS: int = 3
+const FLARE_RINGS: int = 4
 
 
 static func generate_trunk(noise_seed: int, params: CosmoTrunkParams) -> Branch:
-	# TODO: extend the trunk below ground optionally
-	# TODO: add optional ground roots
 	var rng := RandomNumberGenerator.new()
 	rng.seed = noise_seed
 	var angle := rng.randf() * TAU
@@ -38,4 +37,33 @@ static func generate_trunk(noise_seed: int, params: CosmoTrunkParams) -> Branch:
 		center.x += w * noise.get_noise_1d(t * params.height)
 		center.z += w * noise.get_noise_1d(t * params.height + 100.0)
 		trunk.add_point(center, lerpf(params.radius_bottom, params.radius_top, t))
+
+	trunk.base_rings = FLARE_RINGS if params.flare > 0.0 else 0
+	trunk.sink_depth = params.sink_depth
 	return trunk
+
+
+static func flare_base(
+	vertices: PackedVector3Array,
+	first: int,
+	noise_seed: int,
+	params: CosmoTrunkParams,
+) -> void:
+	if params.flare <= 0.0:
+		return
+
+	var noise := FastNoiseLite.new()
+	noise.seed = noise_seed
+	noise.frequency = 1.0
+	var reach := params.height * params.flare_height
+
+	for i in range(first, vertices.size()):
+		var s := minf(1.0 - vertices[i].y / reach, 1.0)
+		if s <= 0.0:
+			continue
+
+		# sampled on a unit circle so it wraps around the trunk without a seam
+		var lobe := noise.get_noise_2dv(Vector2(vertices[i].x, vertices[i].z).normalized())
+		var grow := 1.0 + params.flare * s * s * s * (1.0 + 2.0 * params.flare_lobes * lobe)
+		vertices[i].x *= grow
+		vertices[i].z *= grow

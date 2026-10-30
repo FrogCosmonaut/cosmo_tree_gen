@@ -14,6 +14,9 @@ var level: int = 0
 var terminal: Branch = null
 var is_terminal: bool = false
 
+var base_rings: int = 0
+var sink_depth: float = 0.0
+
 
 func _segment_at(t: float) -> int:
 	return mini(int(_index_at(t)), points.size() - 2)

@@ -53,6 +53,7 @@ radius_bottom = 0.4
 radius_top = 0.12
 lean = 0.5
 wobble = 0.3
+sink_depth = 0.12
 metadata/_custom_type_script = "uid://c0ggn4wsaa746"
 
 [resource]

@@ -55,6 +55,18 @@ leaf_canopy_normals = 0.4
 leaf_inner_ao = 0.6
 metadata/_custom_type_script = "uid://1tt4by0vsl04"
 
+[sub_resource type="Resource" id="Resource_nk31j"]
+script = ExtResource("1_eyupa")
+count = 7
+start = 0.0
+end = 0.02
+angle = 90.0
+length = 0.8
+segments = 5
+gnarl = 0.8
+up_force = -0.796
+metadata/_custom_type_script = "uid://ceh6ii6tlpph4"
+
 [sub_resource type="Resource" id="Resource_norpd"]
 script = ExtResource("6_lwfvh")
 quality = 2
@@ -62,6 +74,9 @@ height = 3.5
 radius_bottom = 0.45
 lean = 0.4
 wobble = 0.3
+flare = 0.7
+sink_depth = 0.1
+roots = SubResource("Resource_nk31j")
 metadata/_custom_type_script = "uid://c0ggn4wsaa746"
 
 [resource]

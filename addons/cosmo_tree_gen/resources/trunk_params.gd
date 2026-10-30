@@ -28,6 +28,30 @@ extends Resource
 	set(value):
 		wobble = value
 		emit_changed()
+@export_range(0.0, 3.0, 0.01) var flare: float = 0.0:
+	set(value):
+		flare = value
+		emit_changed()
+@export_range(0.01, 1.0, 0.01) var flare_height: float = 0.15:
+	set(value):
+		flare_height = value
+		emit_changed()
+@export_range(0.0, 1.0, 0.01) var flare_lobes: float = 0.6:
+	set(value):
+		flare_lobes = value
+		emit_changed()
+@export_range(0.0, 2.0, 0.01) var sink_depth: float = 0.0:
+	set(value):
+		sink_depth = value
+		emit_changed()
+@export var roots: CosmoBranchLevel:
+	set(value):
+		if roots != null:
+			roots.changed.disconnect(emit_changed)
+		roots = value
+		if roots != null:
+			roots.changed.connect(emit_changed)
+		emit_changed()
 
 
 func get_lean_vec(angle: float) -> Vector3:

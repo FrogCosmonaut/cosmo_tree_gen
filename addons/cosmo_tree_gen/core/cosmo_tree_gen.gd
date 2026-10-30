@@ -250,6 +250,17 @@ func _append_branch_tube(
 ) -> void:
 	var points := branch.points.duplicate()
 	var radii := branch.radii.duplicate()
+
+	# bunched towards the ground, where the flare changes the most
+	for k in branch.base_rings:
+		var s := pow(float(k + 1) / (branch.base_rings + 1), 2.0)
+		points.insert(k + 1, branch.points[0].lerp(branch.points[1], s))
+		radii.insert(k + 1, lerpf(branch.radii[0], branch.radii[1], s))
+
+	if branch.sink_depth > 0.0:
+		points.insert(0, branch.points[0] + Vector3.DOWN * branch.sink_depth)
+		radii.insert(0, branch.radii[0])
+
 	var terminal := branch.terminal
 	while terminal != null:
 		# Its first point is the tip it grows from
@@ -283,10 +294,17 @@ func _generate_branches(
 		parents = children
 
 	# terminal branches are meshed inside the tube of the branch they continue
+	var trunk_first := vertices.size()
 	_append_branch_tube(vertices, indices, uvs, trunk, trunk_radial)
+	TrunkGen.flare_base(vertices, trunk_first, noise_seed, trunk_params)
 	for branch in branches:
 		if not branch.is_terminal:
 			_append_branch_tube(vertices, indices, uvs, branch, branch_radial)
+
+	# roots are not added to `branches`, so they get no foliage
+	if trunk_params.roots != null:
+		for root in TreeSkeleton.grow_branches(trunk, trunk_params.roots):
+			_append_branch_tube(vertices, indices, uvs, root, branch_radial)
 
 	if branches.is_empty():
 		return []

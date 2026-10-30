@@ -104,12 +104,28 @@ script = ExtResource("4_fxgjp")
 icosphere_radius = 0.49
 icosphere_amplitude = 0.6
 
+[sub_resource type="Resource" id="Resource_tdg64"]
+script = ExtResource("3_cpj4b")
+start = 0.0
+end = 0.03
+angle = 90.0
+length = 0.271
+segments = 5
+gnarl = 1.2
+up_force = -0.3999999999999999
+metadata/_custom_type_script = "uid://ceh6ii6tlpph4"
+
 [sub_resource type="Resource" id="Resource_fy1p0"]
 script = ExtResource("2_u2se3")
 height = 5.5
 radius_bottom = 0.28
 radius_top = 0.04
 lean = 0.3
+flare = 0.7
+flare_height = 0.32
+flare_lobes = 1.0
+sink_depth = 0.14
+roots = SubResource("Resource_tdg64")
 metadata/_custom_type_script = "uid://c0ggn4wsaa746"
 
 [sub_resource type="Resource" id="Resource_mj7pe"]
@@ -383,6 +399,7 @@ radius_bottom = 0.4
 radius_top = 0.12
 lean = 0.5
 wobble = 0.3
+sink_depth = 0.12
 metadata/_custom_type_script = "uid://c0ggn4wsaa746"
 
 [sub_resource type="Resource" id="Resource_u5t42"]
@@ -423,6 +440,18 @@ leaf_canopy_normals = 0.7
 leaf_inner_ao = 0.4
 metadata/_custom_type_script = "uid://1tt4by0vsl04"
 
+[sub_resource type="Resource" id="Resource_nk31j"]
+script = ExtResource("3_cpj4b")
+count = 7
+start = 0.0
+end = 0.02
+angle = 90.0
+length = 0.8
+segments = 5
+gnarl = 0.8
+up_force = -0.796
+metadata/_custom_type_script = "uid://ceh6ii6tlpph4"
+
 [sub_resource type="Resource" id="Resource_norpd"]
 script = ExtResource("2_u2se3")
 quality = 2
@@ -430,6 +459,9 @@ height = 3.5
 radius_bottom = 0.45
 lean = 0.4
 wobble = 0.3
+flare = 0.7
+sink_depth = 0.1
+roots = SubResource("Resource_nk31j")
 metadata/_custom_type_script = "uid://c0ggn4wsaa746"
 
 [sub_resource type="Resource" id="Resource_7eb7w"]
@@ -524,7 +556,7 @@ metadata/_custom_type_script = "uid://thf11ljosiks"
 
 [node name="Ash" type="Node3D" parent="CardLeaves" unique_id=1925701942]
 script = ExtResource("1_cycnu")
-noise_seed = 729809262
+noise_seed = -731791487
 trunk_params = SubResource("Resource_fy1p0")
 branch_levels = Array[ExtResource("3_cpj4b")]([SubResource("Resource_mj7pe"), SubResource("Resource_t8a6q"), SubResource("Resource_5eeob")])
 foliage_params = SubResource("Resource_qu3ut")
@@ -612,6 +644,7 @@ metadata/_custom_type_script = "uid://thf11ljosiks"
 [node name="WinterOak" type="Node3D" parent="CardLeaves" unique_id=345297676]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, -4)
 script = ExtResource("1_cycnu")
+noise_seed = 2135572971
 trunk_params = SubResource("Resource_norpd")
 branch_levels = Array[ExtResource("3_cpj4b")]([SubResource("Resource_7eb7w"), SubResource("Resource_ntps4"), SubResource("Resource_urb6m")])
 foliage_params = SubResource("Resource_ha3dm")
