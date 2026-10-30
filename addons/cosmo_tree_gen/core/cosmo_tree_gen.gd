@@ -230,24 +230,34 @@ func _add_mesh_instance(node_name: String, mesh: ArrayMesh) -> void:
 	add_child(mi)
 
 
-func _generate_trunk(
+## Meshes a branch and its terminal branches as one seamless tube.
+func _append_branch_tube(
 	vertices: PackedVector3Array,
 	indices: PackedInt32Array,
 	uvs: PackedVector2Array,
+	branch: Branch,
 	radial: int,
-) -> Branch:
-	var trunk := TrunkGen.generate_trunk(noise_seed, trunk_params)
-	MeshUtils.append_tube(vertices, indices, uvs, trunk.points, trunk.radii, radial)
-	return trunk
+) -> void:
+	var points := branch.points.duplicate()
+	var radii := branch.radii.duplicate()
+	var terminal := branch.terminal
+	while terminal != null:
+		# Its first point is the tip it grows from
+		points.append_array(terminal.points.slice(1))
+		radii.append_array(terminal.radii.slice(1))
+		terminal = terminal.terminal
+	MeshUtils.append_tube(vertices, indices, uvs, points, radii, radial, true)
 
 
+## Grows all the branch levels, then meshes them along with the trunk.
 ## Returns the last level of branches (tips).
 func _generate_branches(
 	trunk: Branch,
 	vertices: PackedVector3Array,
 	indices: PackedInt32Array,
 	uvs: PackedVector2Array,
-	radial: int,
+	trunk_radial: int,
+	branch_radial: int,
 ) -> Array[Branch]:
 	var branches: Array[Branch] = []
 	var parents: Array[Branch] = [trunk]
@@ -262,8 +272,11 @@ func _generate_branches(
 			break
 		parents = children
 
+	# terminal branches are meshed inside the tube of the branch they continue
+	_append_branch_tube(vertices, indices, uvs, trunk, trunk_radial)
 	for branch in branches:
-		MeshUtils.append_tube(vertices, indices, uvs, branch.points, branch.radii, radial)
+		if not branch.is_terminal:
+			_append_branch_tube(vertices, indices, uvs, branch, branch_radial)
 
 	if branches.is_empty():
 		return []
@@ -331,15 +344,24 @@ func generate_tree() -> void:
 	var uvs := PackedVector2Array()
 
 	# Trunk
-	var trunk := _generate_trunk(vertices, indices, uvs, trunk_radial)
+	var trunk := TrunkGen.generate_trunk(noise_seed, trunk_params)
 
-	# Trunk collision
+	# Trunk collision, without the terminal branches
 	if use_collision:
-		_add_trunk_collision(vertices)
+		var trunk_vertices := PackedVector3Array()
+		MeshUtils.append_tube(
+			trunk_vertices,
+			PackedInt32Array(),
+			PackedVector2Array(),
+			trunk.points,
+			trunk.radii,
+			trunk_radial,
+		)
+		_add_trunk_collision(trunk_vertices)
 
 	# Branches
 	var tips: Array[Branch] = [trunk]
-	tips.append_array(_generate_branches(trunk, vertices, indices, uvs, branch_radial))
+	tips.append_array(_generate_branches(trunk, vertices, indices, uvs, trunk_radial, branch_radial))
 
 	var trunk_mesh: ArrayMesh
 	if create_trunk:
@@ -351,7 +373,7 @@ func generate_tree() -> void:
 	if foliage_params != null and create_foliage:
 		# TODO: add different types of foliage, E.G.: dead trees, pines, etc...
 		match foliage_params.type:
-			CosmoFoliageParams.Type.NONE: pass  # TODO: maybe close branch caps?
+			CosmoFoliageParams.Type.NONE: pass
 			CosmoFoliageParams.Type.ICOSPHERES: foliage_mesh = _create_icospheres_mesh(tips)
 			CosmoFoliageParams.Type.LEAVES: foliage_mesh = _create_leaves_mesh(tips)
 

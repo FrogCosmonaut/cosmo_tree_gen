@@ -102,6 +102,7 @@ static func append_tube(
 	points: PackedVector3Array,
 	radii: PackedFloat32Array,
 	radial: int,
+	close_end: bool = false,
 ) -> void:
 	var base := vertices.size()
 	var count := points.size()
@@ -136,6 +137,16 @@ static func append_tube(
 			var c := a + ring
 			var d := c + 1
 			indices.append_array(PackedInt32Array([d, c, a, d, a, b]))
+
+	# close tube with a cap
+	var tip_radius := radii[count - 1]
+	if close_end and tip_radius > 0.0:
+		var apex := vertices.size()
+		var last := base + (count - 1) * ring
+		vertices.push_back(points[count - 1] + tangent * tip_radius)
+		uvs.push_back(Vector2(0.5, -(length + tip_radius) * v_scale))
+		for j in radial:
+			indices.append_array(PackedInt32Array([apex, last + j, last + j + 1]))
 
 
 static func combine_meshes(array_meshes: Array[ArrayMesh]) -> ArrayMesh:

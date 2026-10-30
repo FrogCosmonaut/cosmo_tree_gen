@@ -8,6 +8,10 @@ extends Resource
 	set(value):
 		count = value
 		emit_changed()
+@export var terminal: bool = false:
+	set(value):
+		terminal = value
+		emit_changed()
 @export_range(0.0, 1.0) var start: float = 0.4:
 	set(value):
 		start = value

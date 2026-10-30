@@ -3,10 +3,16 @@
 extends RefCounted
 ## A polyline definition, a radius per point.
 
+const Branch := preload("./branch.gd")
+
 var branch_seed: int = 0
 var points := PackedVector3Array()
 var radii := PackedFloat32Array()
 var level: int = 0
+
+## Branch grown from this terminal branch's tip
+var terminal: Branch = null
+var is_terminal: bool = false
 
 
 func _segment_at(t: float) -> int:
