@@ -4,10 +4,20 @@
 extends RefCounted
 
 
-static func _write_import_materials(path: String, state: GLTFState) -> Error:
+static func _get_import_file(path: String) -> ConfigFile:
 	var import := ConfigFile.new()
-	import.load(path + ".import")
-	import.set_value("remap", "importer", "scene")
+	var err := import.load(path + ".import")
+	if err != OK:
+		push_warning("CosmoTreeGen: exporter - error loading %s '%s'" % [path + ".import", error_string(err)])
+		return null
+
+	return import
+
+
+static func _write_import_materials(path: String, state: GLTFState) -> Error:
+	var import := _get_import_file(path)
+	if import == null:
+		return ERR_CANT_OPEN
 
 	var subresources: Dictionary = import.get_value("params", "_subresources", {})
 	var materials: Dictionary = subresources.get("materials", {})
@@ -31,9 +41,34 @@ static func _write_import_materials(path: String, state: GLTFState) -> Error:
 	return import.save(path + ".import")
 
 
+static func _set_root_name(path: String, name: String) -> Error:
+	var import := _get_import_file(path)
+	import.set_value("params", "nodes/root_name", name)
+	return import.save(path + ".import")
+
+
+static func _wait_for_import_file(path: String) -> Error:
+	var fs := EditorInterface.get_resource_filesystem()
+	var tree := Engine.get_main_loop() as SceneTree
+	var res_path := ProjectSettings.localize_path(path)
+
+	fs.scan()
+	while true:
+		var reimported: PackedStringArray = await fs.resources_reimported
+		if reimported.has(res_path):
+			break
+
+	await tree.process_frame
+
+	if not FileAccess.file_exists(path + ".import"):
+		return ERR_CANT_OPEN
+
+	return OK
+
+
 ## experimental
-static func export_gltf_instances(path: String, meshes: Array[MeshInstance3D]) -> Error:
-	if meshes.is_empty():
+static func export_gltf_instances(path: String, tree: CosmoTreeGen, options: Dictionary = {}) -> Error:
+	if tree == null:
 		return ERR_UNCONFIGURED
 	if (
 		path.get_file().get_basename().is_empty()
@@ -41,27 +76,41 @@ static func export_gltf_instances(path: String, meshes: Array[MeshInstance3D]) -
 	):
 		return ERR_FILE_BAD_PATH
 
-	var exported: Array[MeshInstance3D] = []
-	for mesh: MeshInstance3D in meshes:
+	var exported: Array[Node] = []
+	for mesh: MeshInstance3D in tree.get_meshes():
 		exported.append(mesh.duplicate())
+
+	var collision_node := tree.get_collision()
+	if collision_node != null and options.get("include_collision", false):
+		exported.append(collision_node.duplicate())
 
 	var file_name := path.get_file().get_basename()
 	var root := Node3D.new()
 	root.name = file_name
-	for mesh: MeshInstance3D in exported:
-		root.add_child(mesh)
-		mesh.owner = root
+	for node: Node in exported:
+		root.add_child(node)
+		node.owner = root
+		for child in node.get_children():
+			child.owner = root
 
 	var document := GLTFDocument.new()
-	document.set_image_format("None")  # TODO: this should also be an option
-	# FIXME: without "None", texture images are not being saved properly
+	if not options.get("export_images", false):
+		document.set_image_format("None")
+		# FIXME: with "export_images" false, texture images are not being saved properly
+
 	var state := GLTFState.new()
 	var err := document.append_from_scene(root, state)
 	if err == OK:
 		err = document.write_to_filesystem(state, path)
+
 	if err == OK:
-		# TODO: make this optional, maybe someone doesn't want "use_external" enabled
+		err = await _wait_for_import_file(path)
+
+	if err == OK and options.get("use_external_material", false):
 		err = _write_import_materials(path, state)
+
+	if err == OK:
+		err = _set_root_name(path, tree.name)
 
 	root.free()
 	return err

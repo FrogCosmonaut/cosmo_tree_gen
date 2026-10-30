@@ -13,13 +13,12 @@ var _preset_paths := PackedStringArray()
 @onready var _seed_button: Button = %SeedButton
 @onready var _stats_label: Label = %StatsLabel
 @onready var _export_button: Button = %ExportButton
+@onready var _export_options_menu: MenuButton = %ExportOptionsMenu
 @onready var _export_dialog: EditorFileDialog = %ExportDialog
 @onready var _preset_dialog: EditorFileDialog = %PresetDialog
 
 
 func _ready() -> void:
-	if is_part_of_edited_scene():
-		return
 	var theme := EditorInterface.get_editor_theme()
 	_preset_menu.icon = theme.get_icon(&"Load", &"EditorIcons")
 	_seed_button.icon = theme.get_icon(&"RandomNumberGenerator", &"EditorIcons")
@@ -28,6 +27,7 @@ func _ready() -> void:
 	_preset_menu.get_popup().index_pressed.connect(_on_preset_menu_index_pressed)
 	_seed_button.pressed.connect(_on_seed_button_pressed)
 	_export_button.pressed.connect(_on_export_button_pressed)
+	_export_options_menu.get_popup().index_pressed.connect(_on_export_options_menu_pressed)
 	_export_dialog.file_selected.connect(_on_export_dialog_file_selected)
 	_preset_dialog.file_selected.connect(_on_preset_dialog_file_selected)
 
@@ -138,10 +138,27 @@ func _on_export_button_pressed() -> void:
 	_export_dialog.popup_file_dialog()
 
 
+func _on_export_options_menu_pressed(index: int) -> void:
+	var popup := _export_options_menu.get_popup()
+	popup.toggle_item_checked(index)
+
+
 func _on_export_dialog_file_selected(path: String) -> void:
-	var err := Exporter.export_gltf_instances(path, tree.get_meshes())
+	var options := _get_export_options()
+	var err := await Exporter.export_gltf_instances(path, tree, options)
 	if err != OK:
 		push_error(
 			"CosmoTreeGen: could not export glTF to '%s' (%s)" % [path, error_string(err)]
 		)
 	EditorInterface.get_resource_filesystem().scan()
+
+
+func _get_export_options() -> Dictionary:
+	# TODO: explore FileDialog.options usage instead
+	var popup := _export_options_menu.get_popup()
+	var options: Dictionary = {
+		"include_collision": popup.is_item_checked(0),
+		"export_images": popup.is_item_checked(1),
+		"use_external_material": popup.is_item_checked(2),
+	}
+	return options

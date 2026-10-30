@@ -21,7 +21,7 @@ Godot 4.4+ required. Developed in 4.6.2.stable.
 - Automatic convex collision generation for the trunk. Optional with a toggle.
 	- Pending: optional foliage collision.
 - Save and load tree presets, saved as `CosmoTreePreset` resource.
-- GLB/gLTF export.
+- Export generated tree as glb/glTF, option to link used materials to the ".import" file.
 
 ## Usage
 Add a `CosmoTreeGen` node.  

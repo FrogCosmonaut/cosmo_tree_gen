@@ -352,6 +352,10 @@ func get_meshes() -> Array[MeshInstance3D]:
 	return meshes
 
 
+func get_collision() -> StaticBody3D:
+	return get_node_or_null(COLLISION_NODE_NAME)
+
+
 func set_random_seed() -> void:
 	noise_seed = randi_range(-2147483648, 2147483647)
 
