@@ -1,10 +1,10 @@
 [gd_resource type="Resource" script_class="CosmoTreePreset" format=3 uid="uid://briv2agm575jt"]
 
 [ext_resource type="Script" uid="uid://ceh6ii6tlpph4" path="res://addons/cosmo_tree_gen/resources/branch_level.gd" id="1_t0c5d"]
-[ext_resource type="Texture2D" uid="uid://bfi4necapptje" path="res://demo/example_textures/branchlet_07.png" id="2_f7vtl"]
+[ext_resource type="Material" uid="uid://ud2fyw42vi52" path="res://demo/example_materials/leaves_07.tres" id="2_t0c5d"]
 [ext_resource type="Script" uid="uid://1tt4by0vsl04" path="res://addons/cosmo_tree_gen/resources/foliage_params.gd" id="3_8yrym"]
 [ext_resource type="Script" uid="uid://dlp11kr4f76j3" path="res://addons/cosmo_tree_gen/resources/preset.gd" id="4_sxca7"]
-[ext_resource type="Texture2D" uid="uid://nf32p1bdtv1w" path="res://demo/example_textures/bark.png" id="5_boqp3"]
+[ext_resource type="Material" uid="uid://b7l8vw0qq0s25" path="res://demo/example_materials/bark.tres" id="5_t0c5d"]
 [ext_resource type="Script" uid="uid://c0ggn4wsaa746" path="res://addons/cosmo_tree_gen/resources/trunk_params.gd" id="6_438rb"]
 
 [sub_resource type="Curve" id="Curve_d1m6b"]
@@ -23,27 +23,12 @@ gnarl = 0.676
 up_force = -0.587
 metadata/_custom_type_script = "uid://ceh6ii6tlpph4"
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_k1rqu"]
-transparency = 2
-alpha_scissor_threshold = 0.4
-alpha_antialiasing_mode = 0
-albedo_texture = ExtResource("2_f7vtl")
-texture_filter = 2
-
-[sub_resource type="Curve" id="Curve_svvho"]
-_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(1, 0.73242235), 0.0, 0.0, 0, 0]
-point_count = 2
-
 [sub_resource type="Resource" id="Resource_x31ta"]
 script = ExtResource("3_8yrym")
 type = 2
-leaf_size = 0.31
-leaf_size_curve = SubResource("Curve_svvho")
+leaf_size = 0.49
+leaf_length_influence = 0.762
 leaf_start = 0.0
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_d1m6b"]
-albedo_texture = ExtResource("5_boqp3")
-texture_filter = 0
 
 [sub_resource type="Resource" id="Resource_ykvhj"]
 script = ExtResource("6_438rb")
@@ -58,5 +43,5 @@ script = ExtResource("4_sxca7")
 trunk_params = SubResource("Resource_ykvhj")
 branch_levels = Array[ExtResource("1_t0c5d")]([SubResource("Resource_svvho")])
 foliage_params = SubResource("Resource_x31ta")
-trunk_material = SubResource("StandardMaterial3D_d1m6b")
-foliage_material = SubResource("StandardMaterial3D_k1rqu")
+trunk_material = ExtResource("5_t0c5d")
+foliage_material = ExtResource("2_t0c5d")

@@ -15,7 +15,6 @@ end = 1.0
 angle = 60.0
 length = 0.95
 radius = 0.7
-segments = 4
 up_force = 0.15
 metadata/_custom_type_script = "uid://ceh6ii6tlpph4"
 
@@ -28,7 +27,7 @@ end = 1.0
 angle = 70.0
 length = 1.0
 radius = 0.4
-segments = 8
+segments = 6
 gnarl = 0.1
 up_force = -2.0
 metadata/_custom_type_script = "uid://ceh6ii6tlpph4"
@@ -36,6 +35,7 @@ metadata/_custom_type_script = "uid://ceh6ii6tlpph4"
 [sub_resource type="Resource" id="Resource_h5sl1"]
 script = ExtResource("3_5hl3x")
 type = 2
+leaf_count = 20
 leaf_tip = true
 leaf_size = 0.35
 leaf_size_variance = 0.2

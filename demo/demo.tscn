@@ -6,9 +6,7 @@
 [ext_resource type="Script" uid="uid://1tt4by0vsl04" path="res://addons/cosmo_tree_gen/resources/foliage_params.gd" id="4_fxgjp"]
 [ext_resource type="Material" uid="uid://b7l8vw0qq0s25" path="res://demo/example_materials/bark.tres" id="5_cpj4b"]
 [ext_resource type="Material" uid="uid://1aem886fag5n" path="res://demo/example_materials/foliage.tres" id="7_1ld14"]
-[ext_resource type="Texture2D" uid="uid://nf32p1bdtv1w" path="res://demo/example_textures/bark.png" id="7_08yoa"]
 [ext_resource type="Material" uid="uid://deodinjmuohgl" path="res://demo/example_materials/leaves_01.tres" id="7_ykvhj"]
-[ext_resource type="Texture2D" uid="uid://bfi4necapptje" path="res://demo/example_textures/branchlet_07.png" id="9_s6gsv"]
 [ext_resource type="Material" uid="uid://dm5as0s5uoju2" path="res://demo/example_materials/leaves_03.tres" id="10_fxgjp"]
 [ext_resource type="Material" uid="uid://cluv26uchlkcx" path="res://demo/example_materials/leaves_04.tres" id="11_1rqa4"]
 [ext_resource type="Material" uid="uid://bhtq0iyc1n5ch" path="res://demo/example_materials/leaves_06.tres" id="12_xm42s"]
@@ -185,27 +183,12 @@ gnarl = 0.676
 up_force = -0.587
 metadata/_custom_type_script = "uid://ceh6ii6tlpph4"
 
-[sub_resource type="Curve" id="Curve_svvho"]
-_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(1, 0.73242235), 0.0, 0.0, 0, 0]
-point_count = 2
-
 [sub_resource type="Resource" id="Resource_x31ta"]
 script = ExtResource("4_fxgjp")
 type = 2
-leaf_size = 0.31
-leaf_size_curve = SubResource("Curve_svvho")
+leaf_size = 0.49
+leaf_length_influence = 0.762
 leaf_start = 0.0
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_d1m6b"]
-albedo_texture = ExtResource("7_08yoa")
-texture_filter = 0
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_k1rqu"]
-transparency = 2
-alpha_scissor_threshold = 0.4
-alpha_antialiasing_mode = 0
-albedo_texture = ExtResource("9_s6gsv")
-texture_filter = 2
 
 [sub_resource type="Resource" id="Resource_d1m6b"]
 script = ExtResource("2_u2se3")
@@ -410,7 +393,6 @@ end = 1.0
 angle = 60.0
 length = 0.95
 radius = 0.7
-segments = 4
 up_force = 0.15
 metadata/_custom_type_script = "uid://ceh6ii6tlpph4"
 
@@ -423,7 +405,7 @@ end = 1.0
 angle = 70.0
 length = 1.0
 radius = 0.4
-segments = 8
+segments = 6
 gnarl = 0.1
 up_force = -2.0
 metadata/_custom_type_script = "uid://ceh6ii6tlpph4"
@@ -431,6 +413,7 @@ metadata/_custom_type_script = "uid://ceh6ii6tlpph4"
 [sub_resource type="Resource" id="Resource_h5sl1"]
 script = ExtResource("4_fxgjp")
 type = 2
+leaf_count = 20
 leaf_tip = true
 leaf_size = 0.35
 leaf_size_variance = 0.2
@@ -556,8 +539,8 @@ noise_seed = 857689528
 trunk_params = SubResource("Resource_ykvhj")
 branch_levels = Array[ExtResource("3_cpj4b")]([SubResource("Resource_svvho")])
 foliage_params = SubResource("Resource_x31ta")
-trunk_material = SubResource("StandardMaterial3D_d1m6b")
-foliage_material = SubResource("StandardMaterial3D_k1rqu")
+trunk_material = ExtResource("5_cpj4b")
+foliage_material = ExtResource("14_nk31j")
 metadata/_custom_type_script = "uid://thf11ljosiks"
 
 [node name="Bush" type="Node3D" parent="CardLeaves" unique_id=339446749]
