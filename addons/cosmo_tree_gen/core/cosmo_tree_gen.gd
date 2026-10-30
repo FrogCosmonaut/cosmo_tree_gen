@@ -129,6 +129,8 @@ func _set_surface_material(surface_name: String, material: Material) -> bool:
 		if mi == null:
 			continue
 		var mesh := mi.mesh as ArrayMesh
+		if mesh == null:
+			continue
 		var idx := mesh.surface_find_by_name(surface_name)
 		if idx != -1:
 			mesh.surface_set_material(idx, material)
