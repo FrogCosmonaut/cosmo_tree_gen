@@ -52,3 +52,7 @@ extends Resource
 	set(value):
 		up_force = value
 		emit_changed()
+@export_range(0.0, 1.0) var broken_chance: float = 0.0:
+	set(value):
+		broken_chance = value
+		emit_changed()

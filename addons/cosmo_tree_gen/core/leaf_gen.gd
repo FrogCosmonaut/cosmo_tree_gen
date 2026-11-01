@@ -66,7 +66,7 @@ static func append_leaves(
 		# both drawn always so toggling leaf_double or skipping a leaf doesn't reshuffle the other leaves
 		var variant := rng.randf()
 		var double_variant := rng.randf()
-		if size <= 0.0:
+		if size <= 0.0 or branch.is_broken:
 			continue
 
 		var up := (tangent * cos(tilt) + side * sin(tilt)) * size
@@ -81,7 +81,7 @@ static func append_leaves(
 		var tangent := branch.tangent_at(1.0)
 		var helper := Vector3.RIGHT if absf(tangent.y) > 0.9 else Vector3.UP
 		var size := _get_leaf_size_at(rng, params, 1.0, length_influence)
-		if size <= 0.0:
+		if size <= 0.0 or branch.is_broken:
 			return
 
 		var up := tangent * size

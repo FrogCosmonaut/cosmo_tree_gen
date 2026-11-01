@@ -185,6 +185,9 @@ func _create_icospheres_mesh(branches: Array[Branch]) -> ArrayMesh:
 	var indices := PackedInt32Array()
 	var trunk := branches[0]
 	for branch in branches:
+		if branch.is_broken:
+			continue
+
 		var length_ratio := branch.get_length() / trunk.get_length()
 		var length_influence := lerpf(1.0, length_ratio, foliage_params.icosphere_length_influence)
 		IcosphereGen.append_icosphere(
@@ -197,6 +200,7 @@ func _create_icospheres_mesh(branches: Array[Branch]) -> ArrayMesh:
 			foliage_params.icosphere_amplitude,
 			foliage_params.icosphere_frequency,
 		)
+
 	return MeshUtils.build_mesh(vertices, indices, flat_shading)
 
 

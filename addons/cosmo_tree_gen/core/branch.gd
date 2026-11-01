@@ -13,6 +13,7 @@ var level: int = 0
 ## Branch grown from this terminal branch's tip
 var terminal: Branch = null
 var is_terminal: bool = false
+var is_broken: bool = false
 
 var base_rings: int = 0
 var sink_depth: float = 0.0

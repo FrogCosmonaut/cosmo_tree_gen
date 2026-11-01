@@ -16,19 +16,32 @@ static func _grow_branch(
 	dir: Vector3,
 	r0: float,
 	step: float,
+	is_broken: bool = false,
 ) -> Branch:
 	var branch := Branch.new()
+	branch.is_broken = is_broken
 	var pos := origin
-	for i in level.segments + 1:
-		branch.add_point(pos, lerpf(r0, r0 * 0.2, float(i) / level.segments))
+	var segment_count := maxi(level.segments, 1)
+	var extent := rng.randf_range(0.33, 0.66) if is_broken else 1.0
+	var length: float = step * extent
+	var up_force: float = -absf(level.up_force) if is_broken else level.up_force
+
+	for i in segment_count + 1:
+		var progress := float(i) / segment_count * extent
+		var radius := lerpf(r0, r0 * 0.2, progress)
+		branch.add_point(pos, radius)
 		var random := Vector3(rng.randf_range(-1.0, 1.0), rng.randf_range(-1.0, 1.0), rng.randf_range(-1.0, 1.0))
-		dir = (dir + (Vector3.UP * level.up_force + random * level.gnarl) / level.segments).normalized()
-		pos += dir * step
+		dir = (dir + (Vector3.UP * up_force + random * level.gnarl) / segment_count).normalized()
+		pos += dir * length
+
 	return branch
 
 
 static func grow_branches(parent: Branch, level: CosmoBranchLevel) -> Array[Branch]:
 	var branches: Array[Branch] = []
+	if parent.is_broken:
+		return branches
+
 	var step := parent.get_length() * level.length / level.segments
 
 	for k in level.count:
@@ -54,7 +67,9 @@ static func grow_branches(parent: Branch, level: CosmoBranchLevel) -> Array[Bran
 		if branch_step <= 0.0:
 			continue
 
-		var branch := _grow_branch(level, rng, origin, dir, r0, branch_step)
+		var is_broken: bool = rng.randf() < level.broken_chance
+
+		var branch := _grow_branch(level, rng, origin, dir, r0, branch_step, is_broken)
 		branch.branch_seed = branch_seed
 		branch.level = parent.level + 1
 		branches.append(branch)
