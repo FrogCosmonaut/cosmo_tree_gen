@@ -3,6 +3,7 @@
 @tool
 extends EditorPlugin
 
+const Settings := preload("./core/settings.gd")
 const TreeGenBar := preload("./ui/tree_gen_bar.gd")
 const BAR_SCENE := preload("./ui/tree_gen_bar.tscn")
 
@@ -10,6 +11,7 @@ var _bar: TreeGenBar
 
 
 func _enter_tree() -> void:
+	Settings.setup_settings()
 	_bar = BAR_SCENE.instantiate()
 	_bar.hide()
 	add_control_to_container(CONTAINER_SPATIAL_EDITOR_MENU, _bar)

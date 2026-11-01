@@ -3,6 +3,7 @@
 @tool
 extends HBoxContainer
 
+const Settings := preload("../core/settings.gd")
 const Exporter := preload("../core/exporter.gd")
 
 var tree: CosmoTreeGen: set = _set_tree
@@ -18,10 +19,14 @@ var _preset_paths := PackedStringArray()
 
 
 func _ready() -> void:
+	ProjectSettings.settings_changed.connect(_on_project_settings_changed)
+	_on_project_settings_changed()
+
 	var theme := EditorInterface.get_editor_theme()
 	_preset_menu.icon = theme.get_icon(&"Load", &"EditorIcons")
 	_seed_button.icon = theme.get_icon(&"RandomNumberGenerator", &"EditorIcons")
 	_export_button.icon = theme.get_icon(&"Save", &"EditorIcons")
+
 	_preset_menu.about_to_popup.connect(_on_preset_menu_about_to_popup)
 	_preset_menu.get_popup().index_pressed.connect(_on_preset_menu_index_pressed)
 	_seed_button.pressed.connect(_on_seed_button_pressed)
@@ -83,6 +88,15 @@ func _apply_preset(path: String) -> void:
 	print("CosmoTreeGen: applied preset '%s'" % path)
 
 
+func _on_project_settings_changed() -> void:
+	var include_collisions := int(Settings.get_setting(Settings.EXPORT_INCLUDE_COLLISIONS, false))
+	var export_images := int(Settings.get_setting(Settings.EXPORT_IMAGES, false))
+	var use_external_material := int(Settings.get_setting(Settings.EXPORT_USE_EXTERNAL_MATERIAL, false))
+	_export_dialog.set_option_default(0, include_collisions)
+	_export_dialog.set_option_default(1, export_images)
+	_export_dialog.set_option_default(2, use_external_material)
+
+
 func _on_preset_menu_about_to_popup() -> void:
 	_preset_paths.clear()
 	_find_presets(EditorInterface.get_resource_filesystem().get_filesystem())
@@ -132,7 +146,8 @@ func _on_seed_button_pressed() -> void:
 
 
 func _on_export_button_pressed() -> void:
-	_export_dialog.current_file = "%s.gltf" % String(tree.name).to_snake_case()
+	var default_extension: String = Settings.get_setting(Settings.EXPORT_EXTENSION, "glb")
+	_export_dialog.current_file = "%s.%s" % [String(tree.name).to_snake_case(), default_extension]
 	_export_dialog.popup_file_dialog()
 
 
