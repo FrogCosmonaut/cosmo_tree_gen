@@ -31,7 +31,6 @@ Optionally, toggle `use_collision` for convex collision.
 Can be used as is for quick prototyping or exported as glb/glTF.  
 
 ## TODOs
-- Support multiple trunks per tree.
 - Texture and UV scaling, custom texel density setter.
 - Auto LOD generation.
 	- Billboard impostor PNG generation.

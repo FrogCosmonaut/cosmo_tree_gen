@@ -8,6 +8,14 @@ extends Resource
 	set(value):
 		quality = value
 		emit_changed()
+@export_range(1, 6) var amount: int = 1:
+	set(value):
+		amount = value
+		emit_changed()
+@export_range(0.0, 4.0, 0.01) var spread: float = 1.0:
+	set(value):
+		spread = value
+		emit_changed()
 @export_range(0.1, 25.0, 0.1) var height: float = 4.5:
 	set(value):
 		height = value
@@ -56,3 +64,9 @@ extends Resource
 
 func get_lean_vec(angle: float) -> Vector3:
 	return Vector3(cos(angle), 0.0, sin(angle)) * lean
+
+
+func get_base_offset(angle: float) -> Vector3:
+	if amount < 2:
+		return Vector3.ZERO
+	return Vector3(cos(angle), 0.0, sin(angle)) * spread * radius_bottom / sin(PI / amount)

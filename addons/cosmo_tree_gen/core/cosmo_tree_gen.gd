@@ -163,20 +163,29 @@ func _clear_generated() -> void:
 			node.free()
 
 
-func _add_trunk_collision(trunk_vertices: PackedVector3Array) -> void:
+func _add_trunk_collision(trunks: Array[Branch], radial: int) -> void:
 	var static_body := StaticBody3D.new()
 	static_body.name = COLLISION_NODE_NAME
 	static_body.collision_layer = collision_layer
 	static_body.collision_mask = collision_mask
 
-	var col_shape := CollisionShape3D.new()
-	col_shape.name = "TrunkCollisionShape"
+	for trunk: Branch in trunks:
+		var trunk_vertices := PackedVector3Array()
+		MeshUtils.append_tube(
+			trunk_vertices,
+			PackedInt32Array(),
+			PackedVector2Array(),
+			trunk.points,
+			trunk.radii,
+			radial,
+		)
+		var col_shape := CollisionShape3D.new()
+		col_shape.name = "TrunkCollisionShape"
+		var convex_shape := ConvexPolygonShape3D.new()
+		convex_shape.points = trunk_vertices.duplicate()
+		col_shape.shape = convex_shape
+		static_body.add_child(col_shape)
 
-	var convex_shape := ConvexPolygonShape3D.new()
-	convex_shape.points = trunk_vertices.duplicate()
-
-	col_shape.shape = convex_shape
-	static_body.add_child(col_shape)
 	add_child(static_body)
 
 
@@ -204,12 +213,12 @@ func _create_icospheres_mesh(branches: Array[Branch]) -> ArrayMesh:
 	return MeshUtils.build_mesh(vertices, indices, flat_shading)
 
 
-func _create_leaves_mesh(tips: Array[Branch]) -> ArrayMesh:
+func _create_leaves_mesh(tips: Array[Branch], trunk_count: int) -> ArrayMesh:
 	var vertices := PackedVector3Array()
 	var indices := PackedInt32Array()
 	var uvs := PackedVector2Array()
-	# tips[0] is the trunk, only gets leaves when there are no branches
-	var first := 1 if tips.size() > 1 else 0
+	# tips starts with the trunks, they only get leaves when there are no branches
+	var first := trunk_count if tips.size() > trunk_count else 0
 	var longest := 0.0
 	for i in range(first, tips.size()):
 		longest = maxf(longest, tips[i].get_length())
@@ -277,7 +286,7 @@ func _append_branch_tube(
 ## Grows all the branch levels, then meshes them along with the trunk.
 ## Returns the last level of branches (tips).
 func _generate_branches(
-	trunk: Branch,
+	trunks: Array[Branch],
 	vertices: PackedVector3Array,
 	indices: PackedInt32Array,
 	uvs: PackedVector2Array,
@@ -285,7 +294,7 @@ func _generate_branches(
 	branch_radial: int,
 ) -> Array[Branch]:
 	var branches: Array[Branch] = []
-	var parents: Array[Branch] = [trunk]
+	var parents: Array[Branch] = trunks
 	for level in branch_levels:
 		if level == null:
 			continue
@@ -298,17 +307,19 @@ func _generate_branches(
 		parents = children
 
 	# terminal branches are meshed inside the tube of the branch they continue
-	var trunk_first := vertices.size()
-	_append_branch_tube(vertices, indices, uvs, trunk, trunk_radial)
-	TrunkGen.flare_base(vertices, trunk_first, noise_seed, trunk_params)
+	for trunk in trunks:
+		var trunk_first := vertices.size()
+		_append_branch_tube(vertices, indices, uvs, trunk, trunk_radial)
+		TrunkGen.flare_base(vertices, trunk_first, trunk, trunk_params)
 	for branch in branches:
 		if not branch.is_terminal:
 			_append_branch_tube(vertices, indices, uvs, branch, branch_radial)
 
 	# roots are not added to `branches`, so they get no foliage
 	if trunk_params.roots != null:
-		for root in TreeSkeleton.grow_branches(trunk, trunk_params.roots):
-			_append_branch_tube(vertices, indices, uvs, root, branch_radial)
+		for trunk in trunks:
+			for root in TreeSkeleton.grow_branches(trunk, trunk_params.roots):
+				_append_branch_tube(vertices, indices, uvs, root, branch_radial)
 
 	if branches.is_empty():
 		return []
@@ -379,25 +390,16 @@ func generate_tree() -> void:
 	var indices := PackedInt32Array()
 	var uvs := PackedVector2Array()
 
-	# Trunk
-	var trunk := TrunkGen.generate_trunk(noise_seed, trunk_params)
+	# Trunks
+	var trunks: Array[Branch] = TrunkGen.generate_trunk(noise_seed, trunk_params)
 
 	# Trunk collision, without the terminal branches
 	if use_collision:
-		var trunk_vertices := PackedVector3Array()
-		MeshUtils.append_tube(
-			trunk_vertices,
-			PackedInt32Array(),
-			PackedVector2Array(),
-			trunk.points,
-			trunk.radii,
-			trunk_radial,
-		)
-		_add_trunk_collision(trunk_vertices)
+		_add_trunk_collision(trunks, trunk_radial)
 
 	# Branches
-	var tips: Array[Branch] = [trunk]
-	tips.append_array(_generate_branches(trunk, vertices, indices, uvs, trunk_radial, branch_radial))
+	var tips: Array[Branch] = trunks.duplicate()
+	tips.append_array(_generate_branches(trunks, vertices, indices, uvs, trunk_radial, branch_radial))
 
 	var trunk_mesh: ArrayMesh
 	if create_trunk:
@@ -411,7 +413,7 @@ func generate_tree() -> void:
 		match foliage_params.type:
 			CosmoFoliageParams.Type.NONE: pass
 			CosmoFoliageParams.Type.ICOSPHERES: foliage_mesh = _create_icospheres_mesh(tips)
-			CosmoFoliageParams.Type.LEAVES: foliage_mesh = _create_leaves_mesh(tips)
+			CosmoFoliageParams.Type.LEAVES: foliage_mesh = _create_leaves_mesh(tips, trunks.size())
 
 		if foliage_mesh != null:
 			foliage_mesh.surface_set_name(0, FOLIAGE_SURFACE_NAME)
