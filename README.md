@@ -28,7 +28,7 @@ Add a `CosmoTreeGen` node.
 Add `TrunkParams`, `BranchLevels` and `FoliageParams` resources and tweak them.  
 Add bark and foliage materials.  
 Optionally, toggle `use_collision` for convex collision.  
-Can be used as is for quick prototyping. gLTF and glb export coming soon.  
+Can be used as is for quick prototyping or exported as glb/glTF.  
 
 ## TODOs
 - Support multiple trunks per tree.

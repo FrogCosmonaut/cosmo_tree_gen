@@ -81,7 +81,7 @@ static func export_gltf_instances(path: String, tree: CosmoTreeGen, options: Dic
 		exported.append(mesh.duplicate())
 
 	var collision_node := tree.get_collision()
-	if collision_node != null and options.get("include_collision", false):
+	if collision_node != null and options.get("Include Collisions", false):
 		exported.append(collision_node.duplicate())
 
 	var file_name := path.get_file().get_basename()
@@ -94,9 +94,9 @@ static func export_gltf_instances(path: String, tree: CosmoTreeGen, options: Dic
 			child.owner = root
 
 	var document := GLTFDocument.new()
-	if not options.get("export_images", false):
+	if not options.get("Export Images", false):
 		document.set_image_format("None")
-		# FIXME: with "export_images" false, texture images are not being saved properly
+		# FIXME: texture images are not being saved properly, missing name (saved as ".png")
 
 	var state := GLTFState.new()
 	var err := document.append_from_scene(root, state)
@@ -106,7 +106,7 @@ static func export_gltf_instances(path: String, tree: CosmoTreeGen, options: Dic
 	if err == OK:
 		err = await _wait_for_import_file(path)
 
-	if err == OK and options.get("use_external_material", false):
+	if err == OK and options.get("Use External Material", false):
 		err = _write_import_materials(path, state)
 
 	if err == OK:
