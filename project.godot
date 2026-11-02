@@ -11,9 +11,11 @@ config_version=5
 [application]
 
 config/name="CosmoTreeGen"
+config/version="1.0"
 config/tags=PackedStringArray("addons")
 run/main_scene="uid://c8fxt01sxw6ut"
 config/features=PackedStringArray("4.6", "Forward Plus")
+config/icon="uid://da0ltcru2oqfw"
 
 [editor_plugins]
 
