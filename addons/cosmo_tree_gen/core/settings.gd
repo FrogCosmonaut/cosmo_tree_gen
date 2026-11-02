@@ -5,17 +5,53 @@ extends RefCounted
 
 const SETTINGS_PATH: String = "cosmo_tree_gen"
 
+const LOD1_RATIO: StringName = &"generator/lod1_ratio"
+const LOD2_RATIO: StringName = &"generator/lod2_ratio"
+const LOD1_DISTANCE: StringName = &"generator/lod1_distance"
+const LOD2_DISTANCE: StringName = &"generator/lod2_distance"
+const LOD_END_DISTANCE: StringName = &"generator/lod_end_distance"
 const EXPORT_EXTENSION: StringName = &"export/default_extension"
 const EXPORT_INCLUDE_COLLISIONS: StringName = &"export/default_include_collisions"
 const EXPORT_IMAGES: StringName = &"export/default_export_images"
 const EXPORT_USE_EXTERNAL_MATERIAL: StringName = &"export/default_use_external_material"
 
 const SETTINGS: Dictionary = {
+	LOD1_RATIO: {
+		"value": 0.4,
+		"type": TYPE_FLOAT,
+		"hint": PROPERTY_HINT_RANGE,
+		"hint_string": "0.0,1.0,0.01",
+	},
+	LOD2_RATIO: {
+		"value": 0.15,
+		"type": TYPE_FLOAT,
+		"hint": PROPERTY_HINT_RANGE,
+		"hint_string": "0.0,1.0,0.01",
+	},
+	LOD1_DISTANCE: {
+		"value": 50.0,
+		"type": TYPE_FLOAT,
+		"hint": PROPERTY_HINT_RANGE,
+		"hint_string": "0.0,1000.0,0.1,or_greater,suffix:m",
+	},
+	LOD2_DISTANCE: {
+		"value": 100.0,
+		"type": TYPE_FLOAT,
+		"hint": PROPERTY_HINT_RANGE,
+		"hint_string": "0.0,1000.0,0.1,or_greater,suffix:m",
+	},
+	# 0 keeps the last LOD visible at any distance
+	LOD_END_DISTANCE: {
+		"value": 0.0,
+		"type": TYPE_FLOAT,
+		"hint": PROPERTY_HINT_RANGE,
+		"hint_string": "0.0,1000.0,0.1,or_greater,suffix:m",
+	},
 	EXPORT_EXTENSION: {
 		"value": "glb",
 		"type": TYPE_STRING,
 		"hint": PROPERTY_HINT_ENUM,
-		"hint_string": "glb,gltf"
+		"hint_string": "glb,gltf",
 	},
 	EXPORT_INCLUDE_COLLISIONS: {
 		"value": true,

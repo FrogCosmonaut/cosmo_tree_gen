@@ -20,6 +20,9 @@ Godot 4.4+ required. Developed in 4.6.2.stable.
 	- Leaves, configurable amount and double sided cards.
 - Automatic convex collision generation for the trunk. Optional with a toggle.
 	- Pending: optional foliage collision.
+- Automatic LOD generation:
+	- The trunk is simplified and the rest of the tris budget goes to the leaves.
+	- Leaf cards are not simplified, fewer and bigger cards instead.
 - Save and load tree presets, saved as `CosmoTreePreset` resource.
 - Export generated tree as glb/glTF, option to link used materials to the ".import" file.
 
@@ -28,12 +31,13 @@ Add a `CosmoTreeGen` node.
 Add `TrunkParams`, `BranchLevels` and `FoliageParams` resources and tweak them.  
 Add bark and foliage materials.  
 Optionally, toggle `use_collision` for convex collision.  
-Can be used as is for quick prototyping or exported as glb/glTF.  
+Optionally, toggle `generate_lod` for LODs.  
+Tris budgets and distances can be configured in the  project settings: `cosmo_tree_gen/generator`.  
+Can be used as is for quick prototyping or exported as glb/glTF. LODs are exported too.  
 
 ## TODOs
 - Texture and UV scaling, custom texel density setter.
-- Auto LOD generation.
-	- Billboard impostor PNG generation.
+- Billboard impostor PNG generation for the last LOD.
 - More low-poly foliage variations. (Pine, Boxes)
 - Graph editor. (Probably not needed)
 

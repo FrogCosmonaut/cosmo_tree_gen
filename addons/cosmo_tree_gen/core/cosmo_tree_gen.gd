@@ -7,6 +7,7 @@ extends Node3D
 
 signal generated
 
+const Settings := preload("./settings.gd")
 const Branch := preload("./branch.gd")
 const TrunkGen := preload("./trunk_gen.gd")
 const MeshUtils := preload("./mesh_utils.gd")
@@ -20,6 +21,8 @@ const TRUNK_SURFACE_NAME: String = "Bark"
 const FOLIAGE_NODE_NAME: String = "Foliage"
 const FOLIAGE_SURFACE_NAME: String = "Foliage"
 const COLLISION_NODE_NAME: String = "Collision"
+const LOD_SUFFIXES: Array[String] = ["_LOD0", "_LOD1", "_LOD2"]
+const LOD_HYSTERESIS: float = 1.0
 
 @export_tool_button("Generate tree", "Reload")
 var gen: Callable = generate_tree
@@ -57,6 +60,14 @@ var gen: Callable = generate_tree
 		_regenerate()
 
 @export_group("Meshes")
+@export var generate_lod: bool = false:
+	set(value):
+		generate_lod = value
+		_regenerate()
+@export_range(0.0, 1.0, 0.01) var lod_trunk_share: float = 0.33:
+	set(value):
+		lod_trunk_share = value
+		_regenerate()
 @export var combine_trunk_and_foliage: bool = true:
 	set(value):
 		combine_trunk_and_foliage = value
@@ -124,7 +135,8 @@ func _set_foliage_material(value: Material) -> void:
 
 
 func _set_surface_material(surface_name: String, material: Material) -> bool:
-	for node_name: String in [COMBINED_NODE_NAME, TRUNK_NODE_NAME, FOLIAGE_NODE_NAME]:
+	var found: bool = false
+	for node_name: String in _get_generated_node_names():
 		var mi := get_node_or_null(node_name) as MeshInstance3D
 		if mi == null:
 			continue
@@ -134,8 +146,9 @@ func _set_surface_material(surface_name: String, material: Material) -> bool:
 		var idx := mesh.surface_find_by_name(surface_name)
 		if idx != -1:
 			mesh.surface_set_material(idx, material)
-			return true
-	return false
+			found = true
+
+	return found
 
 
 func _apply_materials() -> void:
@@ -155,8 +168,19 @@ func _regenerate() -> void:
 		generate_tree()
 
 
+func _get_generated_node_names() -> Array[String]:
+	var out: Array[String] = [COLLISION_NODE_NAME]
+
+	for node_name: String in [COMBINED_NODE_NAME, TRUNK_NODE_NAME, FOLIAGE_NODE_NAME]:
+		out.append(node_name)
+		for suffix in LOD_SUFFIXES:
+			out.append(node_name + suffix)
+
+	return out
+
+
 func _clear_generated() -> void:
-	for node_name: String in [COMBINED_NODE_NAME, TRUNK_NODE_NAME, FOLIAGE_NODE_NAME, COLLISION_NODE_NAME]:
+	for node_name: String in _get_generated_node_names():
 		var node := get_node_or_null(node_name)
 		if node:
 			remove_child(node)
@@ -210,7 +234,7 @@ func _create_icospheres_mesh(branches: Array[Branch]) -> ArrayMesh:
 			foliage_params.icosphere_frequency,
 		)
 
-	return MeshUtils.build_mesh(vertices, indices, flat_shading)
+	return MeshUtils.build_mesh(vertices, indices, false)
 
 
 func _create_leaves_mesh(tips: Array[Branch], trunk_count: int) -> ArrayMesh:
@@ -251,6 +275,47 @@ func _add_mesh_instance(node_name: String, mesh: ArrayMesh) -> void:
 	mi.name = node_name
 	mi.mesh = mesh
 	add_child(mi)
+
+
+func _create_lod(trunk_mesh: ArrayMesh, foliage_mesh: ArrayMesh, ratio: float) -> Array[ArrayMesh]:
+	var trunk_tris := MeshUtils.count_triangles(trunk_mesh)
+	var foliage_tris := MeshUtils.count_triangles(foliage_mesh)
+	var budget := (trunk_tris + foliage_tris) * ratio
+
+	var trunk: ArrayMesh
+	if trunk_mesh != null:
+		trunk = MeshUtils.simplify(trunk_mesh, maxf(budget * lod_trunk_share, budget - foliage_tris))
+
+	var foliage: ArrayMesh
+	if foliage_mesh != null:
+		var remaining := budget - MeshUtils.count_triangles(trunk)
+		if foliage_params.type == CosmoFoliageParams.Type.LEAVES:
+			foliage = MeshUtils.generate_leaves_lod(foliage_params, foliage_mesh, remaining / foliage_tris)
+		else:
+			foliage = MeshUtils.simplify(foliage_mesh, remaining)
+
+	return [trunk, foliage]
+
+
+func _setup_lod_ranges() -> void:
+	var lod1: float = Settings.get_setting(Settings.LOD1_DISTANCE, 50.0)
+	var lod2: float = Settings.get_setting(Settings.LOD2_DISTANCE, 100.0)
+	var end: float = Settings.get_setting(Settings.LOD_END_DISTANCE, 0.0)
+	var distances: Array[float] = [0.0, lod1, lod2, end]
+
+	# Godot measures the ranges from the center of the AABB. Sharing it makes all
+	# the meshes of a tree swap LOD at once, with no gaps between them.
+	var bounds := AABB()
+	for mi in get_meshes():
+		bounds = bounds.merge(mi.mesh.get_aabb())
+
+	for lod in LOD_SUFFIXES.size():
+		for mi in get_meshes(lod):
+			mi.visibility_range_begin = distances[lod]
+			mi.visibility_range_begin_margin = LOD_HYSTERESIS
+			mi.visibility_range_end = distances[lod + 1]
+			mi.visibility_range_end_margin = LOD_HYSTERESIS
+			mi.custom_aabb = bounds
 
 
 ## Meshes a branch and its terminal branches as one seamless tube.
@@ -338,6 +403,7 @@ func apply_preset(preset: CosmoTreePreset) -> void:
 	flat_shading = p.flat_shading
 	create_trunk = p.create_trunk
 	create_foliage = p.create_foliage
+	lod_trunk_share = p.lod_trunk_share
 	trunk_material = p.trunk_material
 	foliage_material = p.foliage_material
 	_applying_preset = false
@@ -353,17 +419,28 @@ func to_preset() -> CosmoTreePreset:
 	preset.flat_shading = flat_shading
 	preset.create_trunk = create_trunk
 	preset.create_foliage = create_foliage
+	preset.lod_trunk_share = lod_trunk_share
 	preset.trunk_material = trunk_material
 	preset.foliage_material = foliage_material
 	return preset
 
 
-func get_meshes() -> Array[MeshInstance3D]:
+## Returns the meshes of a LOD, or all the LODs if is negative.
+func get_meshes(lod: int = -1) -> Array[MeshInstance3D]:
+	var suffixes: Array[String] = []
+	if lod <= 0:
+		suffixes.append("")
+	for i in LOD_SUFFIXES.size():
+		if lod < 0 or lod == i:
+			suffixes.append(LOD_SUFFIXES[i])
+
 	var meshes: Array[MeshInstance3D]
-	for node_name: String in [COMBINED_NODE_NAME, TRUNK_NODE_NAME, FOLIAGE_NODE_NAME]:
-		var node := get_node_or_null(node_name) as MeshInstance3D
-		if node != null:
-			meshes.append(node)
+	for suffix in suffixes:
+		for node_name: String in [COMBINED_NODE_NAME, TRUNK_NODE_NAME, FOLIAGE_NODE_NAME]:
+			var node := get_node_or_null(node_name + suffix) as MeshInstance3D
+			if node != null:
+				meshes.append(node)
+
 	return meshes
 
 
@@ -403,7 +480,7 @@ func generate_tree() -> void:
 
 	var trunk_mesh: ArrayMesh
 	if create_trunk:
-		trunk_mesh = MeshUtils.build_mesh(vertices, indices, flat_shading, uvs)
+		trunk_mesh = MeshUtils.build_mesh(vertices, indices, false, uvs)
 		trunk_mesh.surface_set_name(0, TRUNK_SURFACE_NAME)
 
 	# Foliage
@@ -418,18 +495,36 @@ func generate_tree() -> void:
 		if foliage_mesh != null:
 			foliage_mesh.surface_set_name(0, FOLIAGE_SURFACE_NAME)
 
+	# LODs
+	var levels: Array[Array] = [[trunk_mesh, foliage_mesh]]
+	if generate_lod:
+		var lod1_ratio: float = Settings.get_setting(Settings.LOD1_RATIO, 0.4)
+		var lod2_ratio: float = Settings.get_setting(Settings.LOD2_RATIO, 0.15)
+		levels.append(_create_lod(trunk_mesh, foliage_mesh, lod1_ratio))
+		levels.append(_create_lod(trunk_mesh, foliage_mesh, lod2_ratio))
+
+	if flat_shading:
+		for level: Array in levels:
+			if level[0] != null:
+				level[0] = MeshUtils.flatten_mesh(level[0])
+			if level[1] != null and foliage_params.type == CosmoFoliageParams.Type.ICOSPHERES:
+				level[1] = MeshUtils.flatten_mesh(level[1])
+
 	# Create MeshInstance3Ds
-	if combine_trunk_and_foliage:
-		var parts: Array[ArrayMesh] = [trunk_mesh, foliage_mesh]
-		parts = parts.filter(func(x) -> bool: return x != null)
-		if not parts.is_empty():
-			var combined_mesh: ArrayMesh = MeshUtils.combine_meshes(parts)
-			_add_mesh_instance(COMBINED_NODE_NAME, combined_mesh)
-	else:
-		if trunk_mesh != null:
-			_add_mesh_instance(TRUNK_NODE_NAME, trunk_mesh)
-		if foliage_mesh != null:
-			_add_mesh_instance(FOLIAGE_NODE_NAME, foliage_mesh)
+	for lod in levels.size():
+		var suffix: String = LOD_SUFFIXES[lod] if generate_lod else ""
+		var nodes := {TRUNK_NODE_NAME: levels[lod][0], FOLIAGE_NODE_NAME: levels[lod][1]}
+		if combine_trunk_and_foliage:
+			var parts: Array[ArrayMesh] = [levels[lod][0], levels[lod][1]]
+			parts = parts.filter(func(x) -> bool: return x != null)
+			nodes = {COMBINED_NODE_NAME: MeshUtils.combine_meshes(parts) if not parts.is_empty() else null}
+
+		for node_name: String in nodes:
+			if nodes[node_name] != null:
+				_add_mesh_instance(node_name + suffix, nodes[node_name])
+
+	if generate_lod:
+		_setup_lod_ranges()
 
 	# Materials
 	_apply_materials()

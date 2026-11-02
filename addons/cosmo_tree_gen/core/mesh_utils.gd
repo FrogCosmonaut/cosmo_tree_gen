@@ -3,6 +3,9 @@
 extends RefCounted
 ## Shared helpers.
 
+## 1 / golden ratio. Multiples of it spread evenly over [0, 1).
+const GOLDEN_RATIO_CONJUGATE: float = 0.618033988749895
+
 
 static func smooth_normals(vertices: PackedVector3Array, indices: PackedInt32Array) -> PackedVector3Array:
 	var normals := PackedVector3Array()
@@ -91,6 +94,7 @@ static func flatten_mesh(mesh: Mesh) -> ArrayMesh:
 		true,
 		uvs if uvs != null else PackedVector2Array(),
 	)
+	result.surface_set_name(0, mesh.surface_get_name(0))
 	result.surface_set_material(0, mesh.surface_get_material(0))
 	return result
 
@@ -163,4 +167,120 @@ static func combine_meshes(array_meshes: Array[ArrayMesh]) -> ArrayMesh:
 			out.surface_set_name(new_idx, am.surface_get_name(i))
 			out.surface_set_material(new_idx, am.surface_get_material(i))
 
+	return out
+
+
+static func count_triangles(mesh: ArrayMesh) -> int:
+	if mesh == null:
+		return 0
+
+	@warning_ignore("integer_division")
+	return mesh.surface_get_array_index_len(0) / 3
+
+
+## Returns a copy of the arrays without the vertices no index uses,
+## otherwise each LOD keeps the whole LOD0 vertex buffer.
+static func _remove_unused_vertices(arrays: Array) -> Array:
+	var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
+	var vertex_count: int = arrays[Mesh.ARRAY_VERTEX].size()
+
+	var remap := PackedInt32Array()
+	remap.resize(vertex_count)
+	remap.fill(-1)
+	var used := PackedInt32Array()
+	var new_indices := PackedInt32Array()
+	new_indices.resize(indices.size())
+
+	for i in indices.size():
+		var old := indices[i]
+		if remap[old] == -1:
+			remap[old] = used.size()
+			used.push_back(old)
+		new_indices[i] = remap[old]
+
+	var out := []
+	out.resize(Mesh.ARRAY_MAX)
+	out[Mesh.ARRAY_INDEX] = new_indices
+	for attribute in [Mesh.ARRAY_VERTEX, Mesh.ARRAY_NORMAL, Mesh.ARRAY_TEX_UV]:
+		var old_values: Variant = arrays[attribute]
+		if old_values == null:
+			continue
+		var new_values: Variant = old_values.duplicate()
+		new_values.resize(used.size())
+		for i in used.size():
+			new_values[i] = old_values[used[i]]
+		out[attribute] = new_values
+
+	return out
+
+
+static func simplify(src: ArrayMesh, max_triangles: float) -> ArrayMesh:
+	if count_triangles(src) <= max_triangles:
+		return src
+
+	var arrays := src.surface_get_arrays(0)
+	var importer := ImporterMesh.new()
+	importer.add_surface(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	importer.generate_lods(25.0, 60.0, [])
+
+	for lod in importer.get_surface_lod_count(0):
+		var indices := importer.get_surface_lod_indices(0, lod)
+		arrays[Mesh.ARRAY_INDEX] = indices
+		if indices.size() / 3.0 <= max_triangles:
+			break
+
+	var out := ArrayMesh.new()
+	out.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, _remove_unused_vertices(arrays))
+	out.surface_set_name(0, src.surface_get_name(0))
+	return out
+
+
+static func generate_leaves_lod(params: CosmoFoliageParams, src: ArrayMesh, keep: float) -> ArrayMesh:
+	var arrays := src.surface_get_arrays(0)
+	var src_vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	var src_normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
+	var src_colors: PackedColorArray = arrays[Mesh.ARRAY_COLOR]
+	var src_uvs: PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV]
+
+	# 4 vertices per card, see LeafGen._append_quad
+	var cards_per_leaf: int = 2 if params.leaf_double else 1
+	@warning_ignore("integer_division")
+	var leaves: int = src_vertices.size() / 4 / cards_per_leaf
+	var kept := clampf(keep, 1.0 / leaves, 1.0)
+	var card_scale := sqrt(1.0 / kept)
+
+	var vertices := PackedVector3Array()
+	var normals := PackedVector3Array()
+	var colors := PackedColorArray()
+	var uvs := PackedVector2Array()
+	var indices := PackedInt32Array()
+
+	for leaf in leaves:
+		if fposmod(leaf * GOLDEN_RATIO_CONJUGATE, 1.0) >= kept:
+			continue
+
+		for card in cards_per_leaf:
+			var q := (leaf * cards_per_leaf + card) * 4
+			var center := (src_vertices[q] + src_vertices[q + 2]) * 0.5
+			var first := vertices.size()
+			for k in 4:
+				vertices.push_back(center + (src_vertices[q + k] - center) * card_scale)
+				normals.push_back(src_normals[q + k])
+				colors.push_back(src_colors[q + k])
+				uvs.push_back(src_uvs[q + k])
+			indices.append_array(
+				PackedInt32Array([first, first + 3, first + 2, first, first + 2, first + 1])
+			)
+
+	var out_arrays := []
+	out_arrays.resize(Mesh.ARRAY_MAX)
+	out_arrays[Mesh.ARRAY_VERTEX] = vertices
+	out_arrays[Mesh.ARRAY_NORMAL] = normals
+	out_arrays[Mesh.ARRAY_COLOR] = colors
+	out_arrays[Mesh.ARRAY_TEX_UV] = uvs
+	out_arrays[Mesh.ARRAY_INDEX] = indices
+
+	var out := ArrayMesh.new()
+	out.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, out_arrays)
+	out.surface_set_name(0, src.surface_get_name(0))
 	return out

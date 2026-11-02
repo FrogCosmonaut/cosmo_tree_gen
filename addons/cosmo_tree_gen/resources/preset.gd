@@ -15,6 +15,7 @@ extends Resource
 @export var flat_shading: bool = false
 @export var create_trunk: bool = true
 @export var create_foliage: bool = true
+@export_range(0.0, 1.0, 0.01) var lod_trunk_share: float = 0.33
 
 
 func is_valid() -> bool:

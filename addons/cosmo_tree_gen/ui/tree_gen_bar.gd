@@ -47,7 +47,7 @@ func _set_tree(value: CosmoTreeGen) -> void:
 func _update_stats() -> void:
 	var triangles: int = 0
 	var surfaces: int = 0  # each surface is a draw call
-	for mi in tree.get_meshes():
+	for mi in tree.get_meshes(0):
 		var mesh := mi.mesh as ArrayMesh
 		for i in mesh.get_surface_count():
 			var index_len := mesh.surface_get_array_index_len(i)

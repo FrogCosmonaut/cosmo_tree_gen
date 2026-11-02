@@ -41,6 +41,44 @@ static func _write_import_materials(path: String, state: GLTFState) -> Error:
 	return import.save(path + ".import")
 
 
+static func _get_center_distance(a: MeshInstance3D, b: MeshInstance3D) -> float:
+	return a.mesh.get_aabb().get_center().distance_to(b.mesh.get_aabb().get_center())
+
+
+static func _write_import_lods(path: String, tree: CosmoTreeGen) -> Error:
+	var import := _get_import_file(path)
+	if import == null:
+		return ERR_CANT_OPEN
+
+	var subresources: Dictionary = import.get_value("params", "_subresources", {})
+	var nodes: Dictionary = subresources.get("nodes", {})
+
+	var lods: Array[Array] = [tree.get_meshes(0), tree.get_meshes(1), tree.get_meshes(2)]
+	for lod in lods.size():
+		for i in lods[lod].size():
+			var mesh: MeshInstance3D = lods[lod][i]
+			var begin := mesh.visibility_range_begin
+			var end := mesh.visibility_range_end
+			if lod > 0:
+				begin -= _get_center_distance(mesh, lods[lod - 1][i]) * 0.5
+			if lod < lods.size() - 1:
+				end += _get_center_distance(mesh, lods[lod + 1][i]) * 0.5
+
+			nodes["PATH:%s" % mesh.name] = {
+				"mesh_instance/visibility_range_begin": begin,
+				"mesh_instance/visibility_range_begin_margin": mesh.visibility_range_begin_margin,
+				"mesh_instance/visibility_range_end": end,
+				"mesh_instance/visibility_range_end_margin": mesh.visibility_range_end_margin,
+			}
+
+	subresources["nodes"] = nodes
+	import.set_value("params", "_subresources", subresources)
+
+	# Godot automatic LODs break the leaf cards
+	import.set_value("params", "meshes/generate_lods", false)
+	return import.save(path + ".import")
+
+
 static func _set_root_name(path: String, name: String) -> Error:
 	var import := _get_import_file(path)
 	import.set_value("params", "nodes/root_name", name)
@@ -109,8 +147,15 @@ static func export_gltf_instances(path: String, tree: CosmoTreeGen, options: Dic
 	if err == OK and options.get("Use External Material", false):
 		err = _write_import_materials(path, state)
 
+	if err == OK and tree.generate_lod:
+		err = _write_import_lods(path, tree)
+
 	if err == OK:
 		err = _set_root_name(path, tree.name)
+
+	if err == OK:
+		var fs := EditorInterface.get_resource_filesystem()
+		fs.reimport_files(PackedStringArray([ProjectSettings.localize_path(path)]))
 
 	root.free()
 	return err

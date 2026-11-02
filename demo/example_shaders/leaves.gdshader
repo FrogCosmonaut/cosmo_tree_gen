@@ -27,7 +27,11 @@ void vertex() {
 }
 
 void fragment() {
-	vec4 tex = texture(albedo_texture, UV);
+	vec2 tex_size = vec2(textureSize(albedo_texture, 0));
+	vec2 texel = UV * tex_size;
+	float mip = 0.5 * log2(max(dot(dFdx(texel), dFdx(texel)), dot(dFdy(texel), dFdy(texel))));
+	vec4 tex = textureLod(albedo_texture, UV, clamp(mip, 0.0, log2(min(tex_size.x, tex_size.y)) - 3.0));
+
 	ALBEDO = albedo.rgb * tex.rgb;
 	ALPHA = albedo.a * tex.a;
 	ALPHA_SCISSOR_THRESHOLD = alpha_scissor_threshold;
