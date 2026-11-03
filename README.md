@@ -1,5 +1,5 @@
 # Cosmo Tree Gen
-![Cosmo Tree Gen](.github/images/render.png)
+![Cosmo Tree Gen](.github/images/render-logo.png)
 
 Procedural tree generator. Work in progress!  
 
