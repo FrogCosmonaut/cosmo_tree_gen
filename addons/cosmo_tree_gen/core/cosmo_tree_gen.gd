@@ -7,6 +7,21 @@ extends Node3D
 
 signal generated
 
+enum CollisionType {
+	## Do not generate collision shapes.
+	NONE,
+	## Generate one convex collision shape per branch, up to [member collision_level].
+	## Curved branches get a looser fit.
+	SIMPLE_CONVEX,
+	## Generate one convex collision shape per branch segment, up to [member collision_level].
+	## More precise than Simple Convex, it's solid so pushes out bodies. Uses more memory than Trimesh.
+	MULTIPLE_CONVEX,
+	## Generate a single trimesh collision shape, using branch levels up to [member collision_level].
+	## The cheapest and closest fit, but hollow and one-sided. Fast or overlapping bodies can pass through it.
+	## Doesn't work on a [RigidBody3D]. Avoid this if you want falling trees.
+	TRIMESH,
+}
+
 const Settings := preload("./settings.gd")
 const Branch := preload("./branch.gd")
 const TrunkGen := preload("./trunk_gen.gd")
@@ -14,6 +29,7 @@ const MeshUtils := preload("./mesh_utils.gd")
 const TreeSkeleton := preload("./tree_skeleton.gd")
 const IcosphereGen := preload("./icosphere_gen.gd")
 const LeafGen := preload("./leaf_gen.gd")
+const CollisionGen := preload("./collision_gen.gd")
 
 const COMBINED_NODE_NAME: String = "CosmoTree"
 const TRUNK_NODE_NAME: String = "Trunk"
@@ -21,6 +37,8 @@ const TRUNK_SURFACE_NAME: String = "Bark"
 const FOLIAGE_NODE_NAME: String = "Foliage"
 const FOLIAGE_SURFACE_NAME: String = "Foliage"
 const COLLISION_NODE_NAME: String = "Collision"
+const COLLISION_PREVIEW_NODE_NAME: String = "CollisionPreview"
+const COLLISION_RADIAL: int = 6
 const LOD_SUFFIXES: Array[String] = ["_LOD0", "_LOD1", "_LOD2"]
 const LOD_HYSTERESIS: float = 1.0
 
@@ -86,10 +104,24 @@ var gen: Callable = generate_tree
 		_regenerate()
 
 @export_group("Collision")
-@export var use_collision: bool = false:
+## Type of collision to generate for the tree.
+@export var collision_type: CollisionType = CollisionType.NONE:
 	set(value):
-		use_collision = value
+		collision_type = value
 		_regenerate()
+## Maximum level of branches to create collisions for. [br][br]
+## Level 0 generates collisions just for the trunk/s and
+## level 1 for trunks and first level of branches.
+@export_range(0, 20) var collision_level: int = 0:
+	set(value):
+		collision_level = value
+		_regenerate()
+## Draws the collision shapes on top of the tree. Editor only, never exported.
+@export var preview_collision: bool = false:
+	set(value):
+		preview_collision = value
+		if is_node_ready():
+			_update_collision_preview()
 @export_flags_3d_physics var collision_layer: int = 1:
 	set(value):
 		collision_layer = value
@@ -169,7 +201,7 @@ func _regenerate() -> void:
 
 
 func _get_generated_node_names() -> Array[String]:
-	var out: Array[String] = [COLLISION_NODE_NAME]
+	var out: Array[String] = [COLLISION_NODE_NAME, COLLISION_PREVIEW_NODE_NAME]
 
 	for node_name: String in [COMBINED_NODE_NAME, TRUNK_NODE_NAME, FOLIAGE_NODE_NAME]:
 		out.append(node_name)
@@ -187,30 +219,54 @@ func _clear_generated() -> void:
 			node.free()
 
 
-func _add_trunk_collision(trunks: Array[Branch], radial: int) -> void:
+func _add_foliage_collision() -> void:
+	pass
+
+
+func _add_collision(shapes: Array[Shape3D]) -> void:
+	if shapes.is_empty():
+		return
+
 	var static_body := StaticBody3D.new()
 	static_body.name = COLLISION_NODE_NAME
 	static_body.collision_layer = collision_layer
 	static_body.collision_mask = collision_mask
 
-	for trunk: Branch in trunks:
-		var trunk_vertices := PackedVector3Array()
-		MeshUtils.append_tube(
-			trunk_vertices,
-			PackedInt32Array(),
-			PackedVector2Array(),
-			trunk.points,
-			trunk.radii,
-			radial,
-		)
+	for shape: Shape3D in shapes:
 		var col_shape := CollisionShape3D.new()
-		col_shape.name = "TrunkCollisionShape"
-		var convex_shape := ConvexPolygonShape3D.new()
-		convex_shape.points = trunk_vertices.duplicate()
-		col_shape.shape = convex_shape
+		col_shape.shape = shape
 		static_body.add_child(col_shape)
 
 	add_child(static_body)
+
+
+func _update_collision_preview() -> void:
+	var old := get_node_or_null(COLLISION_PREVIEW_NODE_NAME)
+	if old:
+		remove_child(old)
+		old.free()
+
+	var body := get_collision()
+	if not Engine.is_editor_hint() or not preview_collision or body == null:
+		return
+
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_LINES)
+	for col_shape: CollisionShape3D in body.get_children():
+		# surface 0 is the wireframe, 1 the fill, so draw only surface 0
+		st.append_from(col_shape.shape.get_debug_mesh(), 0, col_shape.transform)
+
+	var material := StandardMaterial3D.new()
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.no_depth_test = true
+	material.albedo_color = ProjectSettings.get_setting("debug/shapes/collision/shape_color")
+
+	var mi := MeshInstance3D.new()
+	mi.name = COLLISION_PREVIEW_NODE_NAME
+	mi.mesh = st.commit()
+	mi.material_override = material
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(mi)
 
 
 func _create_icospheres_mesh(branches: Array[Branch]) -> ArrayMesh:
@@ -349,7 +405,6 @@ func _append_branch_tube(
 
 
 ## Grows all the branch levels, then meshes them along with the trunk.
-## Returns the last level of branches (tips).
 func _generate_branches(
 	trunks: Array[Branch],
 	vertices: PackedVector3Array,
@@ -386,9 +441,7 @@ func _generate_branches(
 			for root in TreeSkeleton.grow_branches(trunk, trunk_params.roots):
 				_append_branch_tube(vertices, indices, uvs, root, branch_radial)
 
-	if branches.is_empty():
-		return []
-	return parents
+	return branches
 
 
 func apply_preset(preset: CosmoTreePreset) -> void:
@@ -470,13 +523,25 @@ func generate_tree() -> void:
 	# Trunks
 	var trunks: Array[Branch] = TrunkGen.generate_trunk(noise_seed, trunk_params)
 
-	# Trunk collision, without the terminal branches
-	if use_collision:
-		_add_trunk_collision(trunks, trunk_radial)
-
 	# Branches
+	var branches: Array[Branch] = _generate_branches(trunks, vertices, indices, uvs, trunk_radial, branch_radial)
+
+	# Collisions
+	if collision_type != CollisionType.NONE:
+		var collision_branches: Array[Branch] = trunks.duplicate()
+		collision_branches.append_array(branches)
+		var shapes := CollisionGen.create_shapes(
+			collision_type, collision_branches, collision_level, COLLISION_RADIAL
+		)
+		_add_collision(shapes)
+
 	var tips: Array[Branch] = trunks.duplicate()
-	tips.append_array(_generate_branches(trunks, vertices, indices, uvs, trunk_radial, branch_radial))
+	if not branches.is_empty():
+		var last_level: int = branches.back().level
+		tips.append_array(branches.filter(
+			func(b: Branch) -> bool:
+				return b.level == last_level
+		))
 
 	var trunk_mesh: ArrayMesh
 	if create_trunk:
@@ -528,4 +593,6 @@ func generate_tree() -> void:
 
 	# Materials
 	_apply_materials()
+
+	_update_collision_preview()
 	generated.emit()

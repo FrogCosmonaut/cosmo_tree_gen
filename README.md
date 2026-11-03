@@ -22,7 +22,10 @@ Godot 4.4+ required. Developed in 4.6.2.stable.
 - Foliage:
 	- Icospheres, with configurable subdivisions level.
 	- Card leaves, configurable amount and double sided.
-- Automatic convex collision generation for the trunk. Optional with a toggle.
+- Automatic collision generation.
+	- Three shape types: one convex shape per branch, one convex shape per branch segment, or a single trimesh.
+	- Covers branches up to a configurable level (0 = trunk only).
+	- Collision preview in the editor.
 	- Pending: optional foliage collision.
 - Automatic LOD generation:
 	- LOD0, LOD1 and LOD2 MeshInstance3Ds can be generated with customizable ratios and distances.
@@ -40,7 +43,7 @@ There's a leaves shader with a simple vertex displacement for wind and mipmap li
 Add a `CosmoTreeGen` node.  
 Add `TrunkParams`, `BranchLevels` and `FoliageParams` resources and tweak them.  
 Add bark and foliage materials.  
-Optionally, toggle `use_collision` for convex collision.  
+Optionally, to generate collisions, set `collision_type` and `collision_level`. Preview it toggling `preview_collision`.  
 Optionally, toggle `generate_lod` for LODs.  
 Tris budgets and distances can be configured in the project settings: `cosmo_tree_gen/generator`.  
 Can be used as is for quick prototyping or exported as glb/glTF. LODs are exported too.  
@@ -81,5 +84,8 @@ Trees/branching:
 - Leaves: https://opengameart.org/content/60-cc0-vegetation-textures
 - Bark: https://ambientcg.com/view?id=Bark014
 - Icosphere foliage: Made manually with GIMP.
+- Logo: Procreate + Inkscape
+- Logo background render: Blender
+- Logo font: Neuropol - https://www.dafont.com/es/neuropol.font
 
 ## LICENSE - MIT License
