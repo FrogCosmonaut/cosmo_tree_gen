@@ -4,7 +4,7 @@
 [ext_resource type="Material" uid="uid://cmuj42a78mdm" path="res://demo/materials/leaves_02.tres" id="2_yhwxe"]
 [ext_resource type="Script" uid="uid://1tt4by0vsl04" path="res://addons/cosmo_tree_gen/resources/foliage_params.gd" id="3_j5bjm"]
 [ext_resource type="Script" uid="uid://dlp11kr4f76j3" path="res://addons/cosmo_tree_gen/resources/preset.gd" id="4_oxehs"]
-[ext_resource type="Material" uid="uid://b7l8vw0qq0s25" path="res://demo/materials/bark.tres" id="5_hnl8f"]
+[ext_resource type="Material" uid="uid://b7l8vw0qq0s25" path="res://addons/cosmo_tree_gen/materials/bark.tres" id="5_hnl8f"]
 [ext_resource type="Script" uid="uid://c0ggn4wsaa746" path="res://addons/cosmo_tree_gen/resources/trunk_params.gd" id="6_lwfvh"]
 
 [sub_resource type="Resource" id="Resource_7eb7w"]

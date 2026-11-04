@@ -1,10 +1,10 @@
 [gd_resource type="Resource" script_class="CosmoTreePreset" format=3 uid="uid://cqld5e81q5y3w"]
 
 [ext_resource type="Script" uid="uid://ceh6ii6tlpph4" path="res://addons/cosmo_tree_gen/resources/branch_level.gd" id="1_m84xu"]
-[ext_resource type="Material" uid="uid://dm5as0s5uoju2" path="res://demo/materials/leaves_03.tres" id="2_w2gwb"]
+[ext_resource type="Material" uid="uid://dm5as0s5uoju2" path="res://addons/cosmo_tree_gen/materials/leaves_03.tres" id="2_w2gwb"]
 [ext_resource type="Script" uid="uid://1tt4by0vsl04" path="res://addons/cosmo_tree_gen/resources/foliage_params.gd" id="3_edi87"]
 [ext_resource type="Script" uid="uid://dlp11kr4f76j3" path="res://addons/cosmo_tree_gen/resources/preset.gd" id="4_n8xby"]
-[ext_resource type="Material" uid="uid://b7l8vw0qq0s25" path="res://demo/materials/bark.tres" id="5_4rck0"]
+[ext_resource type="Material" uid="uid://b7l8vw0qq0s25" path="res://addons/cosmo_tree_gen/materials/bark.tres" id="5_4rck0"]
 [ext_resource type="Script" uid="uid://c0ggn4wsaa746" path="res://addons/cosmo_tree_gen/resources/trunk_params.gd" id="6_n2xsm"]
 
 [sub_resource type="Resource" id="Resource_k1rqu"]

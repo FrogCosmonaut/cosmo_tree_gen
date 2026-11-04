@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bxs6plxpy6inu"
-path.s3tc="res://.godot/imported/foliage.png-563fbfa53b9117ea037d33e075aefbee.s3tc.ctex"
+path.s3tc="res://.godot/imported/foliage.png-3eb08250e68b1eb9593babf8dc0ebfd3.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://demo/textures/foliage.png"
-dest_files=["res://.godot/imported/foliage.png-563fbfa53b9117ea037d33e075aefbee.s3tc.ctex"]
+source_file="res://addons/cosmo_tree_gen/textures/foliage.png"
+dest_files=["res://.godot/imported/foliage.png-3eb08250e68b1eb9593babf8dc0ebfd3.s3tc.ctex"]
 
 [params]
 

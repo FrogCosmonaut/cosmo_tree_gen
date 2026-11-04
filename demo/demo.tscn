@@ -4,10 +4,10 @@
 [ext_resource type="Script" uid="uid://c0ggn4wsaa746" path="res://addons/cosmo_tree_gen/resources/trunk_params.gd" id="2_u2se3"]
 [ext_resource type="Script" uid="uid://ceh6ii6tlpph4" path="res://addons/cosmo_tree_gen/resources/branch_level.gd" id="3_cpj4b"]
 [ext_resource type="Script" uid="uid://1tt4by0vsl04" path="res://addons/cosmo_tree_gen/resources/foliage_params.gd" id="4_fxgjp"]
-[ext_resource type="Material" uid="uid://b7l8vw0qq0s25" path="res://demo/materials/bark.tres" id="5_cpj4b"]
-[ext_resource type="Material" uid="uid://1aem886fag5n" path="res://demo/materials/foliage.tres" id="7_1ld14"]
-[ext_resource type="Material" uid="uid://deodinjmuohgl" path="res://demo/materials/leaves_01.tres" id="7_ykvhj"]
-[ext_resource type="Material" uid="uid://dm5as0s5uoju2" path="res://demo/materials/leaves_03.tres" id="10_fxgjp"]
+[ext_resource type="Material" uid="uid://b7l8vw0qq0s25" path="res://addons/cosmo_tree_gen/materials/bark.tres" id="5_cpj4b"]
+[ext_resource type="Material" uid="uid://1aem886fag5n" path="res://addons/cosmo_tree_gen/materials/foliage.tres" id="7_1ld14"]
+[ext_resource type="Material" uid="uid://deodinjmuohgl" path="res://addons/cosmo_tree_gen/materials/leaves_01.tres" id="7_ykvhj"]
+[ext_resource type="Material" uid="uid://dm5as0s5uoju2" path="res://addons/cosmo_tree_gen/materials/leaves_03.tres" id="10_fxgjp"]
 [ext_resource type="Material" uid="uid://cluv26uchlkcx" path="res://demo/materials/leaves_04.tres" id="11_1rqa4"]
 [ext_resource type="Material" uid="uid://bhtq0iyc1n5ch" path="res://demo/materials/leaves_06.tres" id="12_xm42s"]
 [ext_resource type="Material" uid="uid://cyy0xvd2uyh5r" path="res://demo/materials/leaves_05.tres" id="13_tdg64"]
@@ -560,6 +560,8 @@ noise_seed = -731791487
 trunk_params = SubResource("Resource_fy1p0")
 branch_levels = Array[ExtResource("3_cpj4b")]([SubResource("Resource_mj7pe"), SubResource("Resource_t8a6q"), SubResource("Resource_5eeob")])
 foliage_params = SubResource("Resource_qu3ut")
+collision_type = 3
+preview_collision = true
 trunk_material = ExtResource("5_cpj4b")
 foliage_material = ExtResource("7_ykvhj")
 metadata/_custom_type_script = "uid://thf11ljosiks"
