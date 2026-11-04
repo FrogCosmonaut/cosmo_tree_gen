@@ -111,7 +111,7 @@ var gen: Callable = generate_tree
 		_regenerate()
 ## Maximum level of branches to create collisions for. [br][br]
 ## Level 0 generates collisions just for the trunk/s and
-## level 1 for trunks and first level of branches.
+## level 1 for trunks, roots and first level of branches.
 @export_range(0, 20) var collision_level: int = 0:
 	set(value):
 		collision_level = value
@@ -232,9 +232,10 @@ func _add_collision(shapes: Array[Shape3D]) -> void:
 	static_body.collision_layer = collision_layer
 	static_body.collision_mask = collision_mask
 
-	for shape: Shape3D in shapes:
+	for i in shapes.size():
 		var col_shape := CollisionShape3D.new()
-		col_shape.shape = shape
+		col_shape.name = "CollisionShape%d" % i
+		col_shape.shape = shapes[i]
 		static_body.add_child(col_shape)
 
 	add_child(static_body)
@@ -382,14 +383,9 @@ func _append_branch_tube(
 	branch: Branch,
 	radial: int,
 ) -> void:
-	var points := branch.points.duplicate()
-	var radii := branch.radii.duplicate()
-
-	# bunched towards the ground, where the flare changes the most
-	for k in branch.base_rings:
-		var s := pow(float(k + 1) / (branch.base_rings + 1), 2.0)
-		points.insert(k + 1, branch.points[0].lerp(branch.points[1], s))
-		radii.insert(k + 1, lerpf(branch.radii[0], branch.radii[1], s))
+	var ringed: Branch = branch.with_base_rings()
+	var points: PackedVector3Array = ringed.points
+	var radii: PackedFloat32Array = ringed.radii
 
 	if branch.sink_depth > 0.0:
 		points.insert(0, branch.points[0] + Vector3.DOWN * branch.sink_depth)
@@ -405,8 +401,10 @@ func _append_branch_tube(
 
 
 ## Grows all the branch levels, then meshes them along with the trunk.
+## Fills `roots` with the trunk roots, they are not part of the returned branches.
 func _generate_branches(
 	trunks: Array[Branch],
+	roots: Array[Branch],
 	vertices: PackedVector3Array,
 	indices: PackedInt32Array,
 	uvs: PackedVector2Array,
@@ -439,6 +437,7 @@ func _generate_branches(
 	if trunk_params.roots != null:
 		for trunk in trunks:
 			for root in TreeSkeleton.grow_branches(trunk, trunk_params.roots):
+				roots.append(root)
 				_append_branch_tube(vertices, indices, uvs, root, branch_radial)
 
 	return branches
@@ -524,14 +523,18 @@ func generate_tree() -> void:
 	var trunks: Array[Branch] = TrunkGen.generate_trunk(noise_seed, trunk_params)
 
 	# Branches
-	var branches: Array[Branch] = _generate_branches(trunks, vertices, indices, uvs, trunk_radial, branch_radial)
+	var roots: Array[Branch] = []
+	var branches: Array[Branch] = _generate_branches(
+		trunks, roots, vertices, indices, uvs, trunk_radial, branch_radial
+	)
 
 	# Collisions
 	if collision_type != CollisionType.NONE:
 		var collision_branches: Array[Branch] = trunks.duplicate()
 		collision_branches.append_array(branches)
+		collision_branches.append_array(roots)
 		var shapes := CollisionGen.create_shapes(
-			collision_type, collision_branches, collision_level, COLLISION_RADIAL
+			collision_type, collision_branches, collision_level, COLLISION_RADIAL, trunk_params
 		)
 		_add_collision(shapes)
 

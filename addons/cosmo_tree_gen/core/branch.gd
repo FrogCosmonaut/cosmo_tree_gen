@@ -56,3 +56,17 @@ func get_length() -> float:
 
 func tip() -> Vector3:
 	return points[points.size() - 1]
+
+
+func with_base_rings() -> Branch:
+	var out := Branch.new()
+	out.points = points.duplicate()
+	out.radii = radii.duplicate()
+
+	# bunched towards the ground, where the flare changes the most
+	for k in base_rings:
+		var s := pow(float(k + 1) / (base_rings + 1), 2.0)
+		out.points.insert(k + 1, points[0].lerp(points[1], s))
+		out.radii.insert(k + 1, lerpf(radii[0], radii[1], s))
+
+	return out
