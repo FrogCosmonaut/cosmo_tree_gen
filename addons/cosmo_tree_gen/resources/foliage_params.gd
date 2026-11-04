@@ -51,6 +51,12 @@ enum Type {
 	set(value):
 		leaf_size = value
 		emit_changed()
+## Width / height of the leaf cards, their height is [member leaf_size]. [br][br]
+## 0 takes it from the albedo texture of the foliage material, or square if it has none.
+@export_range(0.0, 4.0, 0.01, "or_greater") var leaf_aspect: float = 0.0:
+	set(value):
+		leaf_aspect = value
+		emit_changed()
 @export var leaf_size_curve: Curve:
 	set(value):
 		if leaf_size_curve != null:
@@ -98,3 +104,19 @@ func _validate_property(property: Dictionary) -> void:
 		or (is_icosphere and type != Type.ICOSPHERES)
 	):
 		property.usage = PROPERTY_USAGE_NO_EDITOR
+
+
+func get_leaf_aspect(material: Material) -> float:
+	if leaf_aspect > 0.0:
+		return leaf_aspect
+
+	var texture: Texture2D
+	if material is BaseMaterial3D:
+		texture = (material as BaseMaterial3D).albedo_texture
+	elif material is ShaderMaterial:
+		texture = (material as ShaderMaterial).get_shader_parameter("albedo_texture") as Texture2D
+
+	if texture == null or texture.get_height() == 0:
+		return 1.0
+
+	return float(texture.get_width()) / texture.get_height()

@@ -175,7 +175,12 @@ func _set_trunk_material(value: Material) -> void:
 
 
 func _set_foliage_material(value: Material) -> void:
+	var old_aspect := _get_leaf_aspect()
 	foliage_material = value
+	# the leaf cards take the albedo texture shape, only regenerate when it changes
+	# so generate() -> _apply_materials() doesn't loop
+	if _get_leaf_aspect() != old_aspect:
+		_regenerate()
 
 	if not _set_surface_material(TreeBuilder.FOLIAGE_SURFACE_NAME, foliage_material):
 		return
@@ -183,6 +188,12 @@ func _set_foliage_material(value: Material) -> void:
 	if foliage_params.type == CosmoFoliageParams.Type.ICOSPHERES and foliage_material is StandardMaterial3D:
 		if not (foliage_material as StandardMaterial3D).uv1_triplanar:
 			push_warning("CosmoTreeGen: foliage_material should use UV1 triplanar!")
+
+
+func _get_leaf_aspect() -> float:
+	if foliage_params == null or foliage_params.type != CosmoFoliageParams.Type.LEAVES:
+		return 1.0
+	return foliage_params.get_leaf_aspect(foliage_material)
 
 
 func _set_surface_material(surface_name: String, material: Material) -> bool:

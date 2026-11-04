@@ -63,6 +63,7 @@ static func _append_leaves(
 	branch: Branch,
 	params: CosmoFoliageParams,
 	length_influence: float = 1.0,
+	aspect: float = 1.0,
 ) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash([branch.branch_seed, "ayylmao"])
@@ -85,10 +86,10 @@ static func _append_leaves(
 			continue
 
 		var up := (tangent * cos(tilt) + side * sin(tilt)) * size
-		var right := tangent.cross(side).normalized() * size
+		var right := tangent.cross(side).normalized() * size * aspect
 		_append_quad(vertices, indices, uvs, origin, up, right)
 		if params.leaf_double:
-			var double_right := up.cross(right).normalized() * size
+			var double_right := up.cross(right).normalized() * size * aspect
 			_append_quad(vertices, indices, uvs, origin, up, double_right)
 
 	# terminal leaf, after the loop so it doesn't reshuffle the other leaves
@@ -100,10 +101,10 @@ static func _append_leaves(
 			return
 
 		var up := tangent * size
-		var right := tangent.cross(helper).normalized().rotated(tangent, rng.randf() * TAU) * size
+		var right := tangent.cross(helper).normalized().rotated(tangent, rng.randf() * TAU) * size * aspect
 		_append_quad(vertices, indices, uvs, branch.tip(), up, right)
 		if params.leaf_double:
-			_append_quad(vertices, indices, uvs, branch.tip(), up, up.cross(right).normalized() * size)
+			_append_quad(vertices, indices, uvs, branch.tip(), up, up.cross(right).normalized() * size * aspect)
 
 
 static func _append_quad(
@@ -336,6 +337,7 @@ static func create_leaves_mesh(
 
 	# tips starts with the trunks, they only get leaves when there are no branches
 	var first := trunk_count if tips.size() > trunk_count else 0
+	var aspect: float = tree.foliage_params.get_leaf_aspect(tree.foliage_material)
 	var longest := 0.0
 	for i in range(first, tips.size()):
 		longest = maxf(longest, tips[i].get_length())
@@ -343,7 +345,7 @@ static func create_leaves_mesh(
 		var length_ratio := tips[i].get_length() / longest
 		var length_influence := lerpf(1.0, length_ratio, tree.foliage_params.leaf_length_influence)
 		var tip_first := vertices.size()
-		_append_leaves(vertices, indices, uvs, tips[i], tree.foliage_params, length_influence)
+		_append_leaves(vertices, indices, uvs, tips[i], tree.foliage_params, length_influence, aspect)
 
 		# broken tips get no leaves
 		if vertices.size() == tip_first:
