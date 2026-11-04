@@ -14,6 +14,26 @@ static func _convex(points: PackedVector3Array) -> ConvexPolygonShape3D:
 	return shape
 
 
+## `sphere_radii` is one radius per foliage cluster, only used by SPHERES.
+static func create_foliage_shapes(
+	type: CosmoTreeGen.FoliageCollisionType,
+	foliage_mesh: ArrayMesh,
+	sphere_radii: PackedFloat32Array,
+) -> Array[Shape3D]:
+	var shapes: Array[Shape3D] = []
+
+	match type:
+		CosmoTreeGen.FoliageCollisionType.HULL:
+			shapes.append(foliage_mesh.create_convex_shape(true, true))
+		CosmoTreeGen.FoliageCollisionType.SPHERES:
+			for radius in sphere_radii:
+				var sphere := SphereShape3D.new()
+				sphere.radius = radius
+				shapes.append(sphere)
+
+	return shapes
+
+
 static func create_shapes(
 	type: CosmoTreeGen.CollisionType,
 	branches: Array[Branch],

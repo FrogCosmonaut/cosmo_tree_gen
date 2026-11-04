@@ -107,9 +107,9 @@ static func export_gltf_instances(path: String, tree: CosmoTreeGen, options: Dic
 	for mesh: MeshInstance3D in tree.get_meshes():
 		exported.append(mesh.duplicate())
 
-	var collision_node := tree.get_collision()
-	if collision_node != null and options.get("Include Collisions", false):
-		exported.append(collision_node.duplicate())
+	if options.get("Include Collisions", false):
+		for collision: StaticBody3D in tree.get_collisions():
+			exported.append(collision.duplicate())
 
 	var file_name := path.get_file().get_basename()
 	var root := Node3D.new()

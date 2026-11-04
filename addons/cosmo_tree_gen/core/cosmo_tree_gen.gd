@@ -22,6 +22,15 @@ enum CollisionType {
 	TRIMESH,
 }
 
+enum FoliageCollisionType {
+	## Do not generate collision shapes for foliage.
+	NONE,
+	## Generate one convex collision shape around the whole canopy.
+	HULL,
+	## Generate one SphereShape3D per branch tip.
+	SPHERES,
+}
+
 const Settings := preload("./settings.gd")
 const Branch := preload("./branch.gd")
 const TrunkGen := preload("./trunk_gen.gd")
@@ -37,6 +46,7 @@ const TRUNK_SURFACE_NAME: String = "Bark"
 const FOLIAGE_NODE_NAME: String = "Foliage"
 const FOLIAGE_SURFACE_NAME: String = "Foliage"
 const COLLISION_NODE_NAME: String = "Collision"
+const FOLIAGE_COLLISION_NODE_NAME: String = "FoliageCollision"
 const COLLISION_PREVIEW_NODE_NAME: String = "CollisionPreview"
 const COLLISION_RADIAL: int = 6
 const LOD_SUFFIXES: Array[String] = ["_LOD0", "_LOD1", "_LOD2"]
@@ -104,7 +114,7 @@ var gen: Callable = generate_tree
 		_regenerate()
 
 @export_group("Collision")
-## Type of collision to generate for the tree.
+## Type of collision to generate for the trunk, root and branches.
 @export var collision_type: CollisionType = CollisionType.NONE:
 	set(value):
 		collision_type = value
@@ -115,6 +125,11 @@ var gen: Callable = generate_tree
 @export_range(0, 20) var collision_level: int = 0:
 	set(value):
 		collision_level = value
+		_regenerate()
+## Type of collision to generate for the foliage.
+@export var foliage_collision_type: FoliageCollisionType = FoliageCollisionType.NONE:
+	set(value):
+		foliage_collision_type = value
 		_regenerate()
 ## Draws the collision shapes on top of the tree. Editor only, never exported.
 @export var preview_collision: bool = false:
@@ -201,7 +216,7 @@ func _regenerate() -> void:
 
 
 func _get_generated_node_names() -> Array[String]:
-	var out: Array[String] = [COLLISION_NODE_NAME, COLLISION_PREVIEW_NODE_NAME]
+	var out: Array[String] = [COLLISION_NODE_NAME, FOLIAGE_COLLISION_NODE_NAME, COLLISION_PREVIEW_NODE_NAME]
 
 	for node_name: String in [COMBINED_NODE_NAME, TRUNK_NODE_NAME, FOLIAGE_NODE_NAME]:
 		out.append(node_name)
@@ -219,16 +234,17 @@ func _clear_generated() -> void:
 			node.free()
 
 
-func _add_foliage_collision() -> void:
-	pass
-
-
-func _add_collision(shapes: Array[Shape3D]) -> void:
+## `positions` is optional, one per shape.
+func _add_collision(
+	shapes: Array[Shape3D],
+	node_name: String,
+	positions: PackedVector3Array = PackedVector3Array(),
+) -> void:
 	if shapes.is_empty():
 		return
 
 	var static_body := StaticBody3D.new()
-	static_body.name = COLLISION_NODE_NAME
+	static_body.name = node_name
 	static_body.collision_layer = collision_layer
 	static_body.collision_mask = collision_mask
 
@@ -236,6 +252,8 @@ func _add_collision(shapes: Array[Shape3D]) -> void:
 		var col_shape := CollisionShape3D.new()
 		col_shape.name = "CollisionShape%d" % i
 		col_shape.shape = shapes[i]
+		if not positions.is_empty():
+			col_shape.position = positions[i]
 		static_body.add_child(col_shape)
 
 	add_child(static_body)
@@ -247,15 +265,16 @@ func _update_collision_preview() -> void:
 		remove_child(old)
 		old.free()
 
-	var body := get_collision()
-	if not Engine.is_editor_hint() or not preview_collision or body == null:
+	var cols := get_collisions()
+	if not Engine.is_editor_hint() or not preview_collision or cols.is_empty():
 		return
 
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_LINES)
-	for col_shape: CollisionShape3D in body.get_children():
-		# surface 0 is the wireframe, 1 the fill, so draw only surface 0
-		st.append_from(col_shape.shape.get_debug_mesh(), 0, col_shape.transform)
+	for col in cols:
+		for col_shape: CollisionShape3D in col.get_children():
+			# surface 0 is the wireframe, 1 the fill, so draw only surface 0
+			st.append_from(col_shape.shape.get_debug_mesh(), 0, col_shape.transform)
 
 	var material := StandardMaterial3D.new()
 	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
@@ -270,7 +289,12 @@ func _update_collision_preview() -> void:
 	add_child(mi)
 
 
-func _create_icospheres_mesh(branches: Array[Branch]) -> ArrayMesh:
+## Fills `sphere_centers` and `sphere_radii` with one sphere per icosphere.
+func _create_icospheres_mesh(
+	branches: Array[Branch],
+	sphere_centers: PackedVector3Array,
+	sphere_radii: PackedFloat32Array,
+) -> ArrayMesh:
 	var vertices := PackedVector3Array()
 	var indices := PackedInt32Array()
 	var trunk := branches[0]
@@ -280,24 +304,35 @@ func _create_icospheres_mesh(branches: Array[Branch]) -> ArrayMesh:
 
 		var length_ratio := branch.get_length() / trunk.get_length()
 		var length_influence := lerpf(1.0, length_ratio, foliage_params.icosphere_length_influence)
+		var radius := foliage_params.icosphere_radius * length_influence
 		IcosphereGen.append_icosphere(
 			vertices,
 			indices,
 			branch.tip(),
 			branch.branch_seed,
-			foliage_params.icosphere_radius * length_influence,
+			radius,
 			foliage_params.icosphere_subdivisions,
 			foliage_params.icosphere_amplitude,
 			foliage_params.icosphere_frequency,
 		)
+		# the noise displaces it +-amplitude, so the base radius is the average fit
+		sphere_centers.append(branch.tip())
+		sphere_radii.append(radius)
 
 	return MeshUtils.build_mesh(vertices, indices, false)
 
 
-func _create_leaves_mesh(tips: Array[Branch], trunk_count: int) -> ArrayMesh:
+## Fills `sphere_centers` and `sphere_radii` with one sphere per tip leaf cluster.
+func _create_leaves_mesh(
+	tips: Array[Branch],
+	trunk_count: int,
+	sphere_centers: PackedVector3Array,
+	sphere_radii: PackedFloat32Array,
+) -> ArrayMesh:
 	var vertices := PackedVector3Array()
 	var indices := PackedInt32Array()
 	var uvs := PackedVector2Array()
+
 	# tips starts with the trunks, they only get leaves when there are no branches
 	var first := trunk_count if tips.size() > trunk_count else 0
 	var longest := 0.0
@@ -306,7 +341,18 @@ func _create_leaves_mesh(tips: Array[Branch], trunk_count: int) -> ArrayMesh:
 	for i in range(first, tips.size()):
 		var length_ratio := tips[i].get_length() / longest
 		var length_influence := lerpf(1.0, length_ratio, foliage_params.leaf_length_influence)
+		var tip_first := vertices.size()
 		LeafGen.append_leaves(vertices, indices, uvs, tips[i], foliage_params, length_influence)
+
+		# broken tips get no leaves
+		if vertices.size() == tip_first:
+			continue
+		var bounds := AABB(vertices[tip_first], Vector3.ZERO)
+		for k in range(tip_first, vertices.size()):
+			bounds = bounds.expand(vertices[k])
+		sphere_centers.append(bounds.get_center())
+		# average of the half extents, the corners of the box are mostly empty
+		sphere_radii.append((bounds.size.x + bounds.size.y + bounds.size.z) / 6.0)
 
 	if vertices.is_empty():
 		return null
@@ -496,8 +542,18 @@ func get_meshes(lod: int = -1) -> Array[MeshInstance3D]:
 	return meshes
 
 
-func get_collision() -> StaticBody3D:
-	return get_node_or_null(COLLISION_NODE_NAME)
+func get_collisions() -> Array[StaticBody3D]:
+	var out: Array[StaticBody3D]
+
+	var col_node := get_node_or_null(COLLISION_NODE_NAME)
+	if col_node != null:
+		out.append(col_node)
+
+	var foliage_col_node := get_node_or_null(FOLIAGE_COLLISION_NODE_NAME)
+	if foliage_col_node != null:
+		out.append(foliage_col_node)
+
+	return out
 
 
 func set_random_seed() -> void:
@@ -528,7 +584,7 @@ func generate_tree() -> void:
 		trunks, roots, vertices, indices, uvs, trunk_radial, branch_radial
 	)
 
-	# Collisions
+	# Trunk collisions
 	if collision_type != CollisionType.NONE:
 		var collision_branches: Array[Branch] = trunks.duplicate()
 		collision_branches.append_array(branches)
@@ -536,7 +592,7 @@ func generate_tree() -> void:
 		var shapes := CollisionGen.create_shapes(
 			collision_type, collision_branches, collision_level, COLLISION_RADIAL, trunk_params
 		)
-		_add_collision(shapes)
+		_add_collision(shapes, COLLISION_NODE_NAME)
 
 	var tips: Array[Branch] = trunks.duplicate()
 	if not branches.is_empty():
@@ -553,15 +609,29 @@ func generate_tree() -> void:
 
 	# Foliage
 	var foliage_mesh: ArrayMesh
+	var sphere_centers := PackedVector3Array()
+	var sphere_radii := PackedFloat32Array()
 	if foliage_params != null and create_foliage:
 		# TODO: add different types of foliage, E.G.: dead trees, pines, etc...
 		match foliage_params.type:
 			CosmoFoliageParams.Type.NONE: pass
-			CosmoFoliageParams.Type.ICOSPHERES: foliage_mesh = _create_icospheres_mesh(tips)
-			CosmoFoliageParams.Type.LEAVES: foliage_mesh = _create_leaves_mesh(tips, trunks.size())
+			CosmoFoliageParams.Type.ICOSPHERES:
+				foliage_mesh = _create_icospheres_mesh(tips, sphere_centers, sphere_radii)
+			CosmoFoliageParams.Type.LEAVES:
+				foliage_mesh = _create_leaves_mesh(tips, trunks.size(), sphere_centers, sphere_radii)
 
 		if foliage_mesh != null:
 			foliage_mesh.surface_set_name(0, FOLIAGE_SURFACE_NAME)
+
+	# Foliage collisions
+	if foliage_collision_type != FoliageCollisionType.NONE and foliage_mesh != null:
+		var col_shapes := CollisionGen.create_foliage_shapes(
+			foliage_collision_type, foliage_mesh, sphere_radii
+		)
+		var positions := PackedVector3Array()
+		if foliage_collision_type == FoliageCollisionType.SPHERES:
+			positions = sphere_centers
+		_add_collision(col_shapes, FOLIAGE_COLLISION_NODE_NAME, positions)
 
 	# LODs
 	var levels: Array[Array] = [[trunk_mesh, foliage_mesh]]
