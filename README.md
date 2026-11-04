@@ -1,5 +1,6 @@
-# Cosmo Tree Gen
 ![Cosmo Tree Gen](.github/images/render-logo.png)
+
+# Cosmo Tree Gen
 
 Procedural tree generator. Work in progress!  
 
@@ -43,7 +44,7 @@ There's a leaves shader with a simple vertex displacement for wind and mipmap li
 Add a `CosmoTreeGen` node.  
 Add `TrunkParams`, `BranchLevels` and `FoliageParams` resources and tweak them.  
 Add bark and foliage materials.  
-Optionally, to generate collisions, set `collision_type` and `collision_level`. Preview it toggling `preview_collision`.  
+Optionally, to generate collisions, set `collision_type` and `collision_level`, and optionally `collision_max_height` to cut it at a given height. Preview it toggling `preview_collision`.  
 Optionally, toggle `generate_lod` for LODs.  
 Tris budgets and distances can be configured in the project settings: `cosmo_tree_gen/generator`.  
 Can be used as is for quick prototyping or exported as glb/glTF. LODs are exported too.  

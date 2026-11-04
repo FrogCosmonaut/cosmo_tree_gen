@@ -122,9 +122,15 @@ var gen: Callable = generate_tree
 ## Maximum level of branches to create collisions for. [br][br]
 ## Level 0 generates collisions just for the trunk/s and
 ## level 1 for trunks, roots and first level of branches.
-@export_range(0, 20) var collision_level: int = 0:
+@export_range(0, 6, 1, "or_greater") var collision_level: int = 0:
 	set(value):
 		collision_level = value
+		_regenerate()
+## Cuts the trunk, root and branch collisions at this height, in local space. [br][br]
+## Branches starting above it get no collision. 0 means no limit.
+@export_range(0.0, 25.0, 0.1, "or_greater", "suffix:m") var collision_max_height: float = 0.0:
+	set(value):
+		collision_max_height = value
 		_regenerate()
 ## Type of collision to generate for the foliage.
 @export var foliage_collision_type: FoliageCollisionType = FoliageCollisionType.NONE:
@@ -589,8 +595,10 @@ func generate_tree() -> void:
 		var collision_branches: Array[Branch] = trunks.duplicate()
 		collision_branches.append_array(branches)
 		collision_branches.append_array(roots)
+		var max_height := collision_max_height if collision_max_height > 0.0 else INF
 		var shapes := CollisionGen.create_shapes(
-			collision_type, collision_branches, collision_level, COLLISION_RADIAL, trunk_params
+			collision_type, collision_branches, collision_level, max_height, COLLISION_RADIAL,
+			trunk_params,
 		)
 		_add_collision(shapes, COLLISION_NODE_NAME)
 

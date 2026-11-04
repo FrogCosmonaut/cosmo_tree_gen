@@ -14,6 +14,26 @@ static func _convex(points: PackedVector3Array) -> ConvexPolygonShape3D:
 	return shape
 
 
+## Cuts `branch` in place where it first rises above `max_y`. Returns true if it was cut.
+static func _clip_height(branch: Branch, max_y: float) -> bool:
+	for i in range(1, branch.points.size()):
+		var a := branch.points[i - 1]
+		var b := branch.points[i]
+		if b.y <= max_y:
+			continue
+
+		var t := (max_y - a.y) / (b.y - a.y)
+		var radius := lerpf(branch.radii[i - 1], branch.radii[i], t)
+		branch.points.resize(i)
+		branch.radii.resize(i)
+		# a point right at the limit would make a zero length segment
+		if a.y < max_y:
+			branch.add_point(a.lerp(b, t), radius)
+		return true
+
+	return false
+
+
 ## `sphere_radii` is one radius per foliage cluster, only used by SPHERES.
 static func create_foliage_shapes(
 	type: CosmoTreeGen.FoliageCollisionType,
@@ -38,6 +58,7 @@ static func create_shapes(
 	type: CosmoTreeGen.CollisionType,
 	branches: Array[Branch],
 	max_level: int,
+	max_height: float,
 	radial: int,
 	trunk_params: CosmoTrunkParams,
 ) -> Array[Shape3D]:
@@ -50,16 +71,33 @@ static func create_shapes(
 
 		var part := branch
 		while part != null:
+			if part.points[0].y >= max_height:
+				break
+
 			var ringed: Branch = part.with_base_rings()
+			var cut := _clip_height(ringed, max_height)
 			var vertices := PackedVector3Array()
 			var indices := PackedInt32Array()
+			# a cut end gets a flat cap below instead of the cone poking above the limit
 			MeshUtils.append_tube(
 				vertices, indices, PackedVector2Array(), ringed.points, ringed.radii, radial,
-				part.terminal == null,
+				not cut and part.terminal == null,
 			)
 
 			if part.base_rings > 0 and type != CosmoTreeGen.CollisionType.SIMPLE_CONVEX:
 				TrunkGen.flare_base(vertices, 0, part, trunk_params)
+
+			if cut:
+				# leaning rings tilt above the limit, flatten them onto it
+				for i in vertices.size():
+					vertices[i].y = minf(vertices[i].y, max_height)
+
+				if type == CosmoTreeGen.CollisionType.TRIMESH:
+					var last := (ringed.points.size() - 1) * (radial + 1)
+					for j in radial:
+						faces.append_array(PackedVector3Array([
+							ringed.tip(), vertices[last + j], vertices[last + j + 1],
+						]))
 
 			match type:
 				CosmoTreeGen.CollisionType.SIMPLE_CONVEX:
@@ -73,7 +111,7 @@ static func create_shapes(
 					for i in indices:
 						faces.push_back(vertices[i])
 
-			part = part.terminal
+			part = null if cut else part.terminal
 
 	if not faces.is_empty():
 		var trimesh := ConcavePolygonShape3D.new()
