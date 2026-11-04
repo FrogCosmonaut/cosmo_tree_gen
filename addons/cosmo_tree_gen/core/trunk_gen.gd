@@ -15,7 +15,7 @@ const BASE_HEIGHT_SEGMENTS: int = 3
 const FLARE_RINGS: int = 4
 
 
-static func generate_trunk(noise_seed: int, params: CosmoTrunkParams) -> Array[Branch]:
+static func generate_trunks(noise_seed: int, params: CosmoTrunkParams) -> Array[Branch]:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = noise_seed
 	var start_angle := rng.randf() * TAU

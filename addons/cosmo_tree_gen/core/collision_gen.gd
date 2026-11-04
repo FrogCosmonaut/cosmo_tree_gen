@@ -54,7 +54,7 @@ static func create_foliage_shapes(
 	return shapes
 
 
-static func create_shapes(
+static func create_branch_shapes(
 	type: CosmoTreeGen.CollisionType,
 	branches: Array[Branch],
 	max_level: int,
