@@ -34,6 +34,7 @@ enum FoliageCollisionType {
 const TreeBuilder := preload("./tree_builder.gd")
 const MeshUtils := preload("./mesh_utils.gd")
 const Settings := preload("./settings.gd")
+const Exporter := preload("./exporter.gd")
 
 const COMBINED_NODE_NAME: String = "CosmoTree"
 const TRUNK_NODE_NAME: String = "Trunk"
@@ -434,3 +435,7 @@ func generate() -> void:
 	_update_collision_preview()
 
 	generated.emit()
+
+
+func export_gltf(path: String = "res://tree.glb", options: Dictionary = {}) -> Error:
+	return await Exporter.export_gltf(path, self, options)

@@ -153,7 +153,7 @@ func _on_export_button_pressed() -> void:
 
 func _on_export_dialog_file_selected(path: String) -> void:
 	var options := _export_dialog.get_selected_options()
-	var err := await Exporter.export_gltf_instances(path, tree, options)
+	var err := await Exporter.export_gltf(path, tree, options)
 	if err != OK:
 		push_error(
 			"CosmoTreeGen: could not export glTF to '%s' (%s)" % [path, error_string(err)]

@@ -93,8 +93,7 @@ static func _wait_for_import_file(path: String) -> Error:
 	return OK
 
 
-## experimental
-static func export_gltf_instances(path: String, tree: CosmoTreeGen, options: Dictionary = {}) -> Error:
+static func export_gltf(path: String, tree: CosmoTreeGen, options: Dictionary = {}) -> Error:
 	if tree == null:
 		return ERR_UNCONFIGURED
 	if (

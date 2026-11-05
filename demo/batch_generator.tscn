@@ -1,0 +1,15 @@
+[gd_scene format=3 uid="uid://ehely5qeqxua"]
+
+[ext_resource type="Script" uid="uid://dbmw00fj2h3v6" path="res://demo/batch_generator.gd" id="1_6acij"]
+[ext_resource type="Script" uid="uid://dlp11kr4f76j3" path="res://addons/cosmo_tree_gen/resources/preset.gd" id="2_wslh1"]
+[ext_resource type="Resource" uid="uid://briv2agm575jt" path="res://demo/extra_presets/pine.tres" id="3_cw7sy"]
+[ext_resource type="Resource" uid="uid://dud0uolkbfkt" path="res://addons/cosmo_tree_gen/presets/ash.tres" id="4_0vln7"]
+
+[node name="BatchGenerator" type="Node" unique_id=631098847]
+script = ExtResource("1_6acij")
+presets = Array[ExtResource("2_wslh1")]([ExtResource("3_cw7sy"), ExtResource("4_0vln7")])
+amount = 2
+export_dir = "res://exports"
+instantiate = true
+preview = true
+metadata/_custom_type_script = "uid://dbmw00fj2h3v6"
