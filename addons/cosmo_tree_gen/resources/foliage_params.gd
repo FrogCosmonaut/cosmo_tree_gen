@@ -4,6 +4,8 @@
 class_name CosmoFoliageParams
 extends Resource
 
+const MeshUtils := preload("../core/mesh_utils.gd")
+
 enum Type {
 	NONE,
 	ICOSPHERES,
@@ -110,12 +112,7 @@ func get_leaf_aspect(material: Material) -> float:
 	if leaf_aspect > 0.0:
 		return leaf_aspect
 
-	var texture: Texture2D
-	if material is BaseMaterial3D:
-		texture = (material as BaseMaterial3D).albedo_texture
-	elif material is ShaderMaterial:
-		texture = (material as ShaderMaterial).get_shader_parameter("albedo_texture") as Texture2D
-
+	var texture := MeshUtils.get_albedo_texture(material)
 	if texture == null or texture.get_height() == 0:
 		return 1.0
 

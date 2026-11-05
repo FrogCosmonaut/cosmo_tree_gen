@@ -50,20 +50,20 @@ static func _generate_branches(
 		parents = children
 
 	# terminal branches are meshed inside the tube of the branch they continue
+	var params := tree.trunk_params
+	var uv_density := tree.get_uv_density()
 	for trunk in trunks:
-		var trunk_first := vertices.size()
-		_append_branch_tube(vertices, indices, uvs, trunk, trunk_radial)
-		TrunkGen.flare_base(vertices, trunk_first, trunk, tree.trunk_params)
+		_append_branch_tube(vertices, indices, uvs, trunk, trunk_radial, params, uv_density)
 	for branch in branches:
 		if not branch.is_terminal:
-			_append_branch_tube(vertices, indices, uvs, branch, branch_radial)
+			_append_branch_tube(vertices, indices, uvs, branch, branch_radial, params, uv_density)
 
 	# roots are not added to `branches`, so they get no foliage
-	if tree.trunk_params.roots != null:
+	if params.roots != null:
 		for trunk in trunks:
-			for root in BranchGen.grow_branches(trunk, tree.trunk_params.roots):
+			for root in BranchGen.grow_branches(trunk, params.roots):
 				roots.append(root)
-				_append_branch_tube(vertices, indices, uvs, root, branch_radial)
+				_append_branch_tube(vertices, indices, uvs, root, branch_radial, params, uv_density)
 
 	return branches
 
@@ -75,7 +75,10 @@ static func _append_branch_tube(
 	uvs: PackedVector2Array,
 	branch: Branch,
 	radial: int,
+	trunk_params: CosmoTrunkParams,
+	uv_density: float,
 ) -> void:
+	var first := vertices.size()
 	var ringed: Branch = branch.with_base_rings()
 	var points: PackedVector3Array = ringed.points
 	var radii: PackedFloat32Array = ringed.radii
@@ -90,7 +93,15 @@ static func _append_branch_tube(
 		points.append_array(terminal.points.slice(1))
 		radii.append_array(terminal.radii.slice(1))
 		terminal = terminal.terminal
-	MeshUtils.append_tube(vertices, indices, uvs, points, radii, radial, true)
+	MeshUtils.append_tube(vertices, indices, points, radii, radial, true)
+	if branch.base_rings > 0:
+		TrunkGen.flare_base(vertices, first, branch, trunk_params)
+
+	# after the flare so it doesn't stretch them, offset so the branches don't all start the same
+	var rng := RandomNumberGenerator.new()
+	rng.seed = branch.branch_seed
+	var offset := Vector2(rng.randf(), rng.randf())
+	MeshUtils.append_tube_uvs(uvs, vertices, first, points.size(), radial, uv_density, offset)
 
 
 static func _create_lod(

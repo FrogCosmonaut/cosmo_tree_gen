@@ -80,7 +80,7 @@ static func create_branch_shapes(
 			var indices := PackedInt32Array()
 			# a cut end gets a flat cap below instead of the cone poking above the limit
 			MeshUtils.append_tube(
-				vertices, indices, PackedVector2Array(), ringed.points, ringed.radii, radial,
+				vertices, indices, ringed.points, ringed.radii, radial,
 				not cut and part.terminal == null,
 			)
 

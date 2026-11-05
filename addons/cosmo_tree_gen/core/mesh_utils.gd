@@ -99,7 +99,6 @@ static func _smooth_normals(vertices: PackedVector3Array, indices: PackedInt32Ar
 static func append_tube(
 	vertices: PackedVector3Array,
 	indices: PackedInt32Array,
-	uvs: PackedVector2Array,
 	points: PackedVector3Array,
 	radii: PackedFloat32Array,
 	radial: int,
@@ -109,27 +108,19 @@ static func append_tube(
 	var count := points.size()
 	var ring := radial + 1  # extra vertex per ring for the UV seam
 	var tangent := (points[1] - points[0]).normalized()
-	var helper := Vector3.RIGHT if absf(tangent.y) > 0.9 else Vector3.UP
-	var normal := tangent.cross(helper).normalized()
-	# One texture repeat per base circumference along the tube, square texels at the base
-	var v_scale := 1.0 / (TAU * maxf(radii[0], 0.001))
-	var length := 0.0
+	# the UV seam is at angle 0, start it underneath unless the tube is near vertical
+	var normal := tangent.cross(Vector3.RIGHT) if absf(tangent.y) > 0.9 else Vector3.DOWN + tangent * tangent.y
+	normal = normal.normalized()
 
 	for i in count:
 		tangent = (points[mini(i + 1, count - 1)] - points[maxi(i - 1, 0)]).normalized()
 		normal = (normal - tangent * normal.dot(tangent)).normalized()
 		var binormal := normal.cross(tangent)
-		if i > 0:
-			length += points[i].distance_to(points[i - 1])
-		# u and v decrease so the texture is upright and not mirrored seen from outside
-		var v := -length * v_scale
 		var first := vertices.size()
 		for j in radial:
 			var angle := TAU * j / radial
 			vertices.push_back(points[i] + (normal * cos(angle) + binormal * sin(angle)) * radii[i])
-			uvs.push_back(Vector2(1.0 - float(j) / radial, v))
 		vertices.push_back(vertices[first])
-		uvs.push_back(Vector2(0.0, v))
 
 	for i in count - 1:
 		for j in radial:
@@ -145,9 +136,61 @@ static func append_tube(
 		var apex := vertices.size()
 		var last := base + (count - 1) * ring
 		vertices.push_back(points[count - 1] + tangent * tip_radius)
-		uvs.push_back(Vector2(0.5, -(length + tip_radius) * v_scale))
 		for j in radial:
 			indices.append_array(PackedInt32Array([apex, last + j, last + j + 1]))
+
+
+## World space UVs for the tube append_tube added at `first`, `density` texture repeats per meter,
+## so every tube gets the same texel size. Run it after deforming the tube, it measures the final shape.
+static func append_tube_uvs(
+	uvs: PackedVector2Array,
+	vertices: PackedVector3Array,
+	first: int,
+	rings: int,
+	radial: int,
+	density: float,
+	offset := Vector2.ZERO,
+) -> void:
+	var ring := radial + 1
+	var length := 0.0
+
+	for i in rings:
+		var start := first + i * ring
+		# measured on the surface so the flare slope counts, averaged so the columns don't shear
+		if i > 0:
+			var step := 0.0
+			for j in radial:
+				step += vertices[start + j].distance_to(vertices[start + j - ring])
+			length += step / radial
+
+		var perimeter := 0.0
+		for j in radial:
+			perimeter += vertices[start + j].distance_to(vertices[start + j + 1])
+
+		# centered on the top, so where the tube narrows the texture skews at the seam underneath
+		# u and v decrease so the texture is upright and not mirrored seen from outside
+		var arc := perimeter * 0.5
+		for j in ring:
+			if j > 0:
+				arc -= vertices[start + j].distance_to(vertices[start + j - 1])
+			uvs.push_back(Vector2(arc, -length) * density + offset)
+
+	# cap apex
+	var apex := first + rings * ring
+	if apex < vertices.size():
+		var slant := 0.0
+		for j in radial:
+			slant += vertices[apex].distance_to(vertices[apex - ring + j])
+		uvs.push_back(Vector2(0.0, -(length + slant / radial)) * density + offset)
+
+
+## The albedo texture of a BaseMaterial3D, or the `albedo_texture` uniform of a ShaderMaterial.
+static func get_albedo_texture(material: Material) -> Texture2D:
+	if material is BaseMaterial3D:
+		return (material as BaseMaterial3D).albedo_texture
+	if material is ShaderMaterial:
+		return (material as ShaderMaterial).get_shader_parameter("albedo_texture") as Texture2D
+	return null
 
 
 static func build_mesh(

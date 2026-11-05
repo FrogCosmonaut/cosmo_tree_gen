@@ -32,6 +32,7 @@ enum FoliageCollisionType {
 }
 
 const TreeBuilder := preload("./tree_builder.gd")
+const MeshUtils := preload("./mesh_utils.gd")
 const Settings := preload("./settings.gd")
 
 const COMBINED_NODE_NAME: String = "CosmoTree"
@@ -47,6 +48,7 @@ const FOLIAGE_COLLISION_NODE_NAME: String = "FoliageCollision"
 const COLLISION_PREVIEW_NODE_NAME: String = "CollisionPreview"
 const LOD_SUFFIXES: Array[String] = ["_LOD0", "_LOD1", "_LOD2"]
 const LOD_HYSTERESIS: float = 1.0
+const FALLBACK_TEXTURE_WIDTH: int = 128
 
 @export_tool_button("Generate tree", "Reload")
 var generate_button: Callable = generate
@@ -155,6 +157,11 @@ var generate_button: Callable = generate
 var trunk_material: Material: set = _set_trunk_material
 @export_custom(PROPERTY_HINT_RESOURCE_TYPE, "BaseMaterial3D,ShaderMaterial")
 var foliage_material: Material: set = _set_foliage_material
+## Bark texture pixels per meter, the same on trunks, branches and roots.
+@export_range(1.0, 512.0, 1.0, "or_greater", "suffix:px/m") var texel_density: float = 64.0:
+	set(value):
+		texel_density = value
+		_regenerate()
 
 var _applying_preset: bool = false
 
@@ -170,7 +177,13 @@ func _ready() -> void:
 
 
 func _set_trunk_material(value: Material) -> void:
+	var old_density := get_uv_density()
 	trunk_material = value
+	# the bark UVs scale with the albedo texture width, only regenerate when it changes
+	# so generate() -> _apply_materials() doesn't loop
+	if get_uv_density() != old_density:
+		_regenerate()
+
 	_set_surface_material(TreeBuilder.TRUNK_SURFACE_NAME, trunk_material)
 
 
@@ -387,6 +400,13 @@ func get_collisions() -> Array[StaticBody3D]:
 		out.append(foliage_col_node)
 
 	return out
+
+
+## Bark texture repeats per meter, from the width of the trunk material albedo texture.
+func get_uv_density() -> float:
+	var texture := MeshUtils.get_albedo_texture(trunk_material)
+	var width: int = texture.get_width() if texture != null and texture.get_width() > 0 else FALLBACK_TEXTURE_WIDTH
+	return texel_density / width
 
 
 func set_random_seed() -> void:
