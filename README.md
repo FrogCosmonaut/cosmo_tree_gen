@@ -2,7 +2,7 @@
 
 # Cosmo Tree Gen
 
-Create fully customizable trees, save tree types as presets, and export them to glb/glTF. All inside Godot.  
+Procedural tree generator for Godot 4. Create and tweak trees live in the editor, save them as presets, and export them to glb/glTF with LODs and collisions.
 
 Mainly inspired by Dan Shiffman and EZTree.  
 
@@ -79,13 +79,23 @@ Live generation.
 ![curves](.github/images/example_curve.gif)  
 Curve editor for fine changes.
 
-## TODOs
-- Create documentation page.
-- Add documentation comments to resources parameters.
-- Billboard impostor PNG generation for the last LOD.
-- Add more low-poly foliage variations. (Pine, Boxes)
-- Graph editor. (low priority)
-- Make it compatible with older Godot versions. (low priority)
+## Roadmap
+By priority.
+
+1. Billboard impostor PNG generation for the last LOD.
+1. Add more low-poly foliage variations. (Pine, Boxes)
+1. Add a tree age slider. From sapling to old tree.
+1. Add min-max ranges to presets. It should define a species, from young to old.
+1. Shadow proxy. Low poly mesh for foliage with `SHADOWS_ONLY`.
+1. Bake tree in-place and make the node game-ready. So it can be used without extracting to `.glb`.
+1. Hierarchical wind for trunk, branches and leaves.
+1. Add stumps, fallen trunk and felled trees. From the same seed.
+1. Add flowers, fruits and mushrooms/fungus on the trunk/branches.
+1. Generate one texture atlas per bark+foliage to reduce 1 draw call.
+1. Preset gallery with preview.
+1. Branchlet texture generator.
+1. Graph editor.
+1. Make it compatible with older Godot versions.
 
 ## References used
 Icosphere:

@@ -5,6 +5,7 @@
 class_name CosmoTreeGen
 extends Node3D
 
+## Emitted after [method generate] builds the tree.
 signal generated
 
 enum CollisionType {
@@ -52,24 +53,29 @@ const FALLBACK_TEXTURE_WIDTH: int = 128
 
 @export_tool_button("Generate tree", "Reload")
 var generate_button: Callable = generate
+## Rebuilds the tree every time a parameter changes. Turn it off for heavy trees and use Generate tree.
 @export var auto_generate: bool = true:
 	set(value):
 		auto_generate = value
 		if auto_generate:
 			_regenerate()
 
+## Seed of all the random values. The same seed and parameters always make the same tree.
 @export var noise_seed: int = 42:
 	set(value):
 		noise_seed = value
 		_regenerate()
 
 @export_category("Tree Parameters")
+## Shape of the trunks and their roots.
 @export var trunk_params: CosmoTrunkParams = CosmoTrunkParams.new():
 	set(value):
 		_swap_watch(trunk_params, value)
 		trunk_params = value
 		_regenerate()
 
+## Branch levels, from the trunk out. [br][br]
+## The first level grows from the trunks, the second from the first level branches, and so on.
 @export var branch_levels: Array[CosmoBranchLevel] = []:
 	set(value):
 		for level in branch_levels:
@@ -79,6 +85,7 @@ var generate_button: Callable = generate
 			_swap_watch(null, level)
 		_regenerate()
 
+## Foliage type and shape. It grows on the branches of the last level, or on the trunks if there are none.
 @export var foliage_params: CosmoFoliageParams = CosmoFoliageParams.new():
 	set(value):
 		_swap_watch(foliage_params, value)
@@ -86,33 +93,45 @@ var generate_button: Callable = generate
 		_regenerate()
 
 @export_group("Meshes")
+## Generates 3 LODs (_LOD0, _LOD1 and _LOD2) that swap with the distance. [br][br]
+## Their triangle ratios and distances are in Project Settings > Cosmo Tree Gen > Generator.
 @export var generate_lod: bool = false:
 	set(value):
 		generate_lod = value
 		_regenerate()
+## Share of each LOD triangle budget kept for the trunk, the foliage gets the rest. [br][br]
+## Raise it to keep more trunk detail, lower it to keep more leaves. Only used with [member generate_lod].
 @export_range(0.0, 1.0, 0.01) var lod_trunk_share: float = 0.33:
 	set(value):
 		lod_trunk_share = value
 		_regenerate()
+## Puts the trunk and the foliage in a single mesh, one surface each. [br][br]
+## Turn it off to get separate Trunk and Foliage nodes, e.g. to change the shadows of the foliage only.
+## Both ways it's 2 draw calls (2 materials).
 @export var combine_trunk_and_foliage: bool = true:
 	set(value):
 		combine_trunk_and_foliage = value
 		_regenerate()
+## One normal per face for a low-poly/PSX look, on the trunk, branches, roots and icospheres.
+## Leaf cards aren't affected.
 @export var flat_shading: bool = false:
 	set(value):
 		flat_shading = value
 		_regenerate()
+## Builds the trunk, branches and roots mesh. [br][br]
+## When off, the branches are still generated, so the foliage and the collisions don't change.
 @export var create_trunk: bool = true:
 	set(value):
 		create_trunk = value
 		_regenerate()
+## Builds the foliage mesh. When off, there's no foliage collision either.
 @export var create_foliage: bool = true:
 	set(value):
 		create_foliage = value
 		_regenerate()
 
 @export_group("Collision")
-## Type of collision to generate for the trunk, root and branches.
+## Type of collision to generate for the trunk, roots and branches.
 @export var collision_type: CollisionType = CollisionType.NONE:
 	set(value):
 		collision_type = value
@@ -141,11 +160,13 @@ var generate_button: Callable = generate
 		preview_collision = value
 		if is_node_ready():
 			_update_collision_preview()
+## Physics layers of the generated StaticBody3Ds, trunk and foliage.
 @export_flags_3d_physics var collision_layer: int = 1:
 	set(value):
 		collision_layer = value
 		for body in get_collisions():
 			body.collision_layer = collision_layer
+## Physics layers scanned by the generated StaticBody3Ds, trunk and foliage.
 @export_flags_3d_physics var collision_mask: int = 1:
 	set(value):
 		collision_mask = value
@@ -153,8 +174,16 @@ var generate_button: Callable = generate
 			body.collision_mask = collision_mask
 
 @export_group("Materials")
+## Material of the trunk, branches and roots. [br][br]
+## The width of its albedo texture (the [code]albedo_texture[/code] uniform on a ShaderMaterial)
+## and [member texel_density] set the bark UV scale.
 @export_custom(PROPERTY_HINT_RESOURCE_TYPE, "BaseMaterial3D,ShaderMaterial")
 var trunk_material: Material: set = _set_trunk_material
+## Material of the leaf cards or the icospheres. [br][br]
+## Leaf cards take the shape of its albedo texture (the [code]albedo_texture[/code] uniform on a
+## ShaderMaterial), see [member CosmoFoliageParams.leaf_aspect]. Icospheres have no UVs, they need
+## a material with UV1 Triplanar. The included leaves shader adds wind sway and uses
+## [member CosmoFoliageParams.leaf_inner_ao].
 @export_custom(PROPERTY_HINT_RESOURCE_TYPE, "BaseMaterial3D,ShaderMaterial")
 var foliage_material: Material: set = _set_foliage_material
 ## Bark texture pixels per meter, the same on trunks, branches and roots.
@@ -334,7 +363,8 @@ func _setup_lod_ranges(bounds: AABB) -> void:
 			mi.visibility_range_end_margin = LOD_HYSTERESIS
 			mi.custom_aabb = bounds
 
-
+## Copies the parameters and materials of [param preset] to this tree, and rebuilds it if
+## [member auto_generate] is on. The preset is duplicated, editing the tree doesn't change it.
 func apply_preset(preset: CosmoTreePreset) -> void:
 	# deep copy, so editing the tree doesn't edit the preset file
 	var p := preset.duplicate(true) as CosmoTreePreset
@@ -355,6 +385,7 @@ func apply_preset(preset: CosmoTreePreset) -> void:
 	_regenerate()
 
 
+## Returns a new preset with the current parameters and materials. They're shared with this tree, not copied.
 func to_preset() -> CosmoTreePreset:
 	var preset := CosmoTreePreset.new()
 	preset.trunk_params = trunk_params
@@ -371,7 +402,8 @@ func to_preset() -> CosmoTreePreset:
 	return preset
 
 
-## Returns the meshes of a LOD, or all the LODs if is negative.
+## Returns the meshes of a LOD, or of all the LODs if [param lod] is negative.
+## Without [member generate_lod], all the meshes are LOD 0.
 func get_meshes(lod: int = -1) -> Array[MeshInstance3D]:
 	var suffixes: Array[String] = []
 	if lod <= 0:
@@ -390,6 +422,7 @@ func get_meshes(lod: int = -1) -> Array[MeshInstance3D]:
 	return meshes
 
 
+## Returns the generated StaticBody3Ds: the trunk collision and the foliage collision, if they exist.
 func get_collisions() -> Array[StaticBody3D]:
 	var out: Array[StaticBody3D]
 
@@ -411,10 +444,12 @@ func get_uv_density() -> float:
 	return texel_density / width
 
 
+## Sets a random [member noise_seed]. Rebuilds the tree if [member auto_generate] is on.
 func set_random_seed() -> void:
 	noise_seed = randi_range(-2147483648, 2147483647)
 
 
+## Rebuilds the meshes, collisions and LODs from the current parameters, replacing the old child nodes.
 func generate() -> void:
 	_clear_generated()
 	var result := TreeBuilder.build(self)
@@ -438,6 +473,8 @@ func generate() -> void:
 	generated.emit()
 
 
+## Exports the tree to a .glb or .gltf file at [param path]. Editor only, it must be awaited. [br][br]
+## [param options] uses the option names of the export dialog, the missing ones are off.
 func export_gltf(path: String = "res://tree.glb", options: Dictionary = {}) -> Error:
 	if not Engine.is_editor_hint():
 		return ERR_UNAVAILABLE
