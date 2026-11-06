@@ -34,7 +34,6 @@ enum FoliageCollisionType {
 const TreeBuilder := preload("./tree_builder.gd")
 const MeshUtils := preload("./mesh_utils.gd")
 const Settings := preload("./settings.gd")
-const Exporter := preload("./exporter.gd")
 
 const COMBINED_NODE_NAME: String = "CosmoTree"
 const TRUNK_NODE_NAME: String = "Trunk"
@@ -351,6 +350,7 @@ func apply_preset(preset: CosmoTreePreset) -> void:
 	lod_trunk_share = p.lod_trunk_share
 	trunk_material = p.trunk_material
 	foliage_material = p.foliage_material
+	texel_density = p.texel_density
 	_applying_preset = false
 	_regenerate()
 
@@ -367,6 +367,7 @@ func to_preset() -> CosmoTreePreset:
 	preset.lod_trunk_share = lod_trunk_share
 	preset.trunk_material = trunk_material
 	preset.foliage_material = foliage_material
+	preset.texel_density = texel_density
 	return preset
 
 
@@ -438,4 +439,9 @@ func generate() -> void:
 
 
 func export_gltf(path: String = "res://tree.glb", options: Dictionary = {}) -> Error:
-	return await Exporter.export_gltf(path, self, options)
+	if not Engine.is_editor_hint():
+		return ERR_UNAVAILABLE
+
+	# lazy loaded to prevent errors in shipped games (cannot load EditorInterface,etc..)
+	var exporter := load("./exporter.gd")
+	return await exporter.export_gltf(path, self, options)
