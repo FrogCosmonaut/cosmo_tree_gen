@@ -186,8 +186,10 @@ var trunk_material: Material: set = _set_trunk_material
 ## [member CosmoFoliageParams.leaf_inner_ao].
 @export_custom(PROPERTY_HINT_RESOURCE_TYPE, "BaseMaterial3D,ShaderMaterial")
 var foliage_material: Material: set = _set_foliage_material
-## Bark texture pixels per meter, the same on trunks, branches and roots.
-@export_range(1.0, 512.0, 1.0, "or_greater", "suffix:px/m") var texel_density: float = 64.0:
+## Bark texture pixels per meter, the same on trunks, branches and roots. [br][br]
+## More info about texel density:
+## https://www.artstation.com/blogs/bendvfx/G1nB/texel-density-importance-in-3d-game-asset-creation
+@export_range(32.0, 2048.0, 32.0, "or_greater", "suffix:px/m") var texel_density: float = 64.0:
 	set(value):
 		texel_density = value
 		_regenerate()

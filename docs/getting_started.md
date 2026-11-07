@@ -31,7 +31,9 @@ Once activated, some extra settings will be added to `Project Settings > General
    If it has LODs, they will swap automatically with the distance.
 
 ## Next steps
-- You don't need to export the tree, the `CosmoTreeGen` node can be used as is for quick prototyping.
+- You don't need to export the tree, the `CosmoTreeGen` node can be used as is for quick prototyping.  
+However, this isn't recommended for production, because the tree is generated every time the scene is loaded, which can slow down loading.  
+Also, if you have multiple instances of the same tree with the same seed, their meshes won't be shared, resulting in duplicate draw calls.
 - Check the `demo` folder, there are 7 more presets in `demo/extra_presets`.
 - Generate tens of trees at once with `demo/batch_generator.tscn`. Copy `batch_generator.gd` to your project and change it to your needs.
 - Read more about [parameters](parameters.md), [settings](settings.md) and [exporting](exporting.md).

@@ -12,9 +12,7 @@ _100% Human made. No AI was or ever will be used in this project._
 - Procedural tree generator with configurable branch levels.
 - All the generation is live and auto-updated in the editor.
 - Configurable tree parameters using custom Resources.
-	- Multiple trunks per tree.
-	- Optional roots.
-	- Broken branches by chance.
+	- Multiple trunks per tree, optional roots and broken branches by chance.
 	- Branch level length and leaf card size by curve.
 - Optional flat shading for PSX/PS2 aesthetic.
 - Foliage:
