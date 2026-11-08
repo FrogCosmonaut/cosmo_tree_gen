@@ -9,13 +9,13 @@ Mainly inspired by Dan Shiffman and EZTree.
 _100% Human made. No AI was or ever will be used in this project._  
 
 ## Features
-- Procedural tree generator with configurable branch levels.
-- All the generation is live and auto-updated in the editor.
+- Live generation and auto-updated in the editor.
 - Configurable tree parameters using custom Resources.
-	- Multiple trunks per tree, optional roots and broken branches by chance.
+- Trunk and branches.
+	- Multiple trunks per node, roots and broken branches by chance.
 	- Branch level length and leaf card size by curve.
-- Optional flat shading for PSX/PS2 aesthetic.
-- Foliage:
+	- Optional flat shading for PSX/PS2 aesthetic.
+- Foliage.
 	- Icospheres, with configurable subdivisions level.
 	- Card leaves, configurable amount and double sided, with canopy normals and inner AO.
 	- Leaves shader with wind sway and limited mipmaps, so alpha scissor doesn't make distant leaves disappear.
@@ -24,22 +24,17 @@ _100% Human made. No AI was or ever will be used in this project._
 	- Covers branches up to a configurable level (0 = trunk only).
 	- Collision preview in the editor.
 	- Foliage collision: hull (covers all the foliage), spheres on each leaf/branch end.
-- Automatic LOD generation:
+- Automatic LOD generation.
 	- LOD0, LOD1 and LOD2 MeshInstance3Ds can be generated with customizable ratios and distances.
 	- The trunk is simplified and the rest of the tris budget goes to the leaves.
 	- Leaf cards are not simplified, fewer and bigger cards are kept instead.
-- Export as glb/glTF with LODs and collisions, optionally linking the materials in the `.import` file.
-- Presets:
+- Presets.
 	- 4 premade presets included (Ash, Bush, Low Poly Bush and Low Poly Tree)
 	- 7 more premade presets can be found in the `demo` folder.
 	- Can be saved as `CosmoTreePreset` resources.
-- Exposed API for script generation, see `demo/batch_generator.gd`.
+- Export as glb/glTF with LODs and collisions, optionally linking the materials in the `.import` file.
+- Exposed API for script generation, see [Batch Generation](docs/batch_generation.md).
 - Editor toolbar: load/save presets, randomize seed, export, and it shows draw calls and tris counter per tree.
-
-### Batch generation
-`demo/batch_generator.tscn` generates tens of trees with a single click: each one gets a random seed
-and small variations of its preset (height, lean, branch angles…) and is saved as `<preset>_<seed>.glb`.
-Copy `batch_generator.gd` to your poject and change it to your needs.
 
 ## Requirements
 Godot 4.6+ required. Developed in 4.6.2.stable.  
@@ -54,7 +49,7 @@ You can see more examples and presets in the `demo` folder.
 1. Set bark and foliage materials, or use the ones in `addons/cosmo_tree_gen/materials`. Note: icosphere foliage needs a material with UV1 Triplanar.
 1. Optionally, to generate collisions, set `collision_type` and `collision_level`, and optionally `collision_max_height` to cut it at a given height. Preview it toggling `preview_collision`.
 1. Optionally, toggle `generate_lod` for LODs.
-1. Tris budgets for LOD and distances can be configured in the project settings: `cosmo_tree_gen/generator`.
+1. Tris budgets for LOD and distances can be configured in the project settings, see [Settings](docs/settings.md).
 1. Can be used as is for quick prototyping or exported as glb/glTF from the toolbar.
 
 ## Documentation
@@ -63,6 +58,7 @@ Work in progress.
 - [Parameters](docs/parameters.md)
 - [Settings](docs/settings.md)
 - [Exporting](docs/exporting.md)
+- [Batch Generation](docs/batch_generation.md)
 
 ## Showcase
 ![presets](.github/images/example_presets.gif)  
