@@ -56,6 +56,31 @@ static func _append_icosphere(
 		indices.push_back(base + i)
 
 
+static func _append_leaf(
+	vertices: PackedVector3Array,
+	indices: PackedInt32Array,
+	uvs: PackedVector2Array,
+	origin: Vector3,
+	tangent: Vector3,
+	azimuth: float,
+	size: float,
+	tilt: float,
+	gravity: float,
+	double: bool,
+	aspect: float = 1.0,
+) -> void:
+	var helper := Vector3.RIGHT if absf(tangent.y) > 0.9 else Vector3.UP
+	var side := tangent.cross(helper).normalized().rotated(tangent, azimuth)
+	var dir := tangent * cos(tilt) + side * sin(tilt)
+	var hang := Quaternion.IDENTITY.slerp(Quaternion(dir, Vector3.DOWN), gravity)
+	var up := hang * dir * size
+	var right := hang * tangent.cross(side).normalized() * size * aspect
+	_append_quad(vertices, indices, uvs, origin, up, right)
+	if double:
+		var double_right := up.cross(right).normalized() * size * aspect
+		_append_quad(vertices, indices, uvs, origin, up, double_right)
+
+
 static func _append_leaves(
 	vertices: PackedVector3Array,
 	indices: PackedInt32Array,
@@ -71,40 +96,36 @@ static func _append_leaves(
 
 	for k in params.leaf_count:
 		var t := lerpf(params.leaf_start, 1.0, (k + rng.randf()) / params.leaf_count)
-		var origin := branch.sample(t)
+		var origin := branch.sample(t) + params.leaf_position_offset
 		var tangent := branch.tangent_at(t)
-
-		var helper := Vector3.RIGHT if absf(tangent.y) > 0.9 else Vector3.UP
 		var azimuth := k * BranchGen.GOLDEN_ANGLE + rng.randf_range(-0.3, 0.3)
-		var side := tangent.cross(helper).normalized().rotated(tangent, azimuth)
-
 		var size := _get_leaf_size_at(rng, params, t, length_influence)
-		# both drawn always so toggling leaf_double or skipping a leaf doesn't reshuffle the other leaves
-		var variant := rng.randf()
-		var double_variant := rng.randf()
+
 		if size <= 0.0 or branch.is_broken:
 			continue
 
-		var up := (tangent * cos(tilt) + side * sin(tilt)) * size
-		var right := tangent.cross(side).normalized() * size * aspect
-		_append_quad(vertices, indices, uvs, origin, up, right)
-		if params.leaf_double:
-			var double_right := up.cross(right).normalized() * size * aspect
-			_append_quad(vertices, indices, uvs, origin, up, double_right)
+		_append_leaf(
+			vertices, indices, uvs,
+			origin, tangent, azimuth, size, tilt,
+			params.leaf_gravity, params.leaf_double, aspect,
+		)
 
 	# terminal leaf, after the loop so it doesn't reshuffle the other leaves
 	if params.leaf_tip:
-		var tangent := branch.tangent_at(1.0)
-		var helper := Vector3.RIGHT if absf(tangent.y) > 0.9 else Vector3.UP
+		var leaf_tip_tilt: float = 0.0  # TODO: set this as a foliage param maybe
 		var size := _get_leaf_size_at(rng, params, 1.0, length_influence)
+		var azimuth := rng.randf() * TAU - PI / 2.0
+		var origin := branch.tip() + params.leaf_position_offset
+		var tangent := branch.tangent_at(1.0)
+
 		if size <= 0.0 or branch.is_broken:
 			return
 
-		var up := tangent * size
-		var right := tangent.cross(helper).normalized().rotated(tangent, rng.randf() * TAU) * size * aspect
-		_append_quad(vertices, indices, uvs, branch.tip(), up, right)
-		if params.leaf_double:
-			_append_quad(vertices, indices, uvs, branch.tip(), up, up.cross(right).normalized() * size * aspect)
+		_append_leaf(
+			vertices, indices, uvs,
+			origin, tangent, azimuth, size, leaf_tip_tilt,
+			params.leaf_gravity, params.leaf_double, aspect,
+		)
 
 
 static func _append_quad(

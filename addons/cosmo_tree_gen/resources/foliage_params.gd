@@ -104,10 +104,21 @@ enum Type {
 	set(value):
 		leaf_start = value
 		emit_changed()
+## Offset applied to each leaf's position relative to its attachment point.
+@export var leaf_position_offset: Vector3 = Vector3.ZERO:
+	set(value):
+		leaf_position_offset = value
+		emit_changed()
 ## Angle between the leaf cards and the branch, in degrees. 0 points them along the branch, 90 perpendicular.
 @export_range(0.0, 90.0, 0.05, "degrees") var leaf_angle: float = 40.0:
 	set(value):
 		leaf_angle = value
+		emit_changed()
+## How strong leaves are tilted toward the down direction.
+## 0 keeps the generated orientation, 1 points them full down.
+@export_range(0.0, 1.0) var leaf_gravity: float = 0.0:
+	set(value):
+		leaf_gravity = value
 		emit_changed()
 ## Adds a second card to each leaf, crossed at 90°, so they don't look flat from the side.
 ## Doubles the foliage triangles.

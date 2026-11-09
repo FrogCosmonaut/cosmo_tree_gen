@@ -67,7 +67,7 @@ extends Resource
 		emit_changed()
 ## Bends the branches up when positive, or down when negative, like a willow. [br][br]
 ## Broken branches always bend down. See [member broken_chance].
-@export_range(-2.0, 2.0) var up_force: float = 0.5:
+@export_range(-4.0, 4.0) var up_force: float = 0.5:
 	set(value):
 		up_force = value
 		emit_changed()

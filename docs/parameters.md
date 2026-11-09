@@ -148,7 +148,9 @@ Only the parameters of the selected `type` are shown in the inspector.
 | `leaf_length_influence` | `0.0` | How much the branch length scales the leaves. 0 gives them all the same size, 1 scales them by the branch length relative to the longest branch. |
 | `leaf_size_variance` | `0.3` | Random size variation of each leaf, 0.3 is ±30%. |
 | `leaf_start` | `0.3` | Where the leaves start along the branch, 0 is its base and 1 its tip. |
+| `leaf_position_offset` | `Vector3.ZERO` | Offset applied to each leaf's position relative to its attachment point. |
 | `leaf_angle` | `40°` | Angle between the leaf cards and the branch. 0 points them along the branch, 90 perpendicular. |
+| `leaf_gravity` | `0.0` | How strong leaves are tilted toward the down direction. |
 | `leaf_double` | `true` | Adds a second card to each leaf, crossed at 90°, so they don't look flat from the side. Doubles the foliage triangles. |
 | `leaf_canopy_normals` | `0.8` | Blends the card normals towards a rounded shape around the whole canopy, so it's lit as one volume. 0 keeps the flat card normals. |
 | `leaf_inner_ao` | `0.35` | Brightness of the leaves in the center of the canopy, it fades to 1 towards the edges. 1 disables it. Stored in the vertex color, the included leaves shader uses it as AO. |
