@@ -142,7 +142,7 @@ enum Type {
 
 
 func _validate_property(property: Dictionary) -> void:
-	var prop_name := String(property.name)
+	var prop_name: String = property.name
 	var is_leaf := prop_name.begins_with("leaf_")
 	var is_icosphere := prop_name.begins_with("icosphere_")
 	if (

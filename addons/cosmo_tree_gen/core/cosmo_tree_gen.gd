@@ -365,6 +365,14 @@ func _setup_lod_ranges(bounds: AABB) -> void:
 			mi.visibility_range_end_margin = LOD_HYSTERESIS
 			mi.custom_aabb = bounds
 
+
+func _load_core_script(file_name: String) -> Script:
+	var settings_script: Script = Settings
+	return load(
+		settings_script.resource_path.get_base_dir().path_join(file_name)
+	)
+
+
 ## Copies the parameters and materials of [param preset] to this tree, and rebuilds it if
 ## [member auto_generate] is on. The preset is duplicated, editing the tree doesn't change it.
 func apply_preset(preset: CosmoTreePreset) -> void:
@@ -482,5 +490,6 @@ func export_gltf(path: String = "res://tree.glb", options: Dictionary = {}) -> E
 		return ERR_UNAVAILABLE
 
 	# lazy loaded to prevent errors in shipped games (cannot load EditorInterface,etc..)
-	var exporter := load("./exporter.gd")
+	var exporter := _load_core_script("exporter.gd")
+	@warning_ignore("unsafe_method_access")
 	return await exporter.export_gltf(path, self, options)

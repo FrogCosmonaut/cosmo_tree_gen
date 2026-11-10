@@ -22,10 +22,10 @@ func _ready() -> void:
 	ProjectSettings.settings_changed.connect(_on_project_settings_changed)
 	_on_project_settings_changed()
 
-	var theme := EditorInterface.get_editor_theme()
-	_preset_menu.icon = theme.get_icon(&"Load", &"EditorIcons")
-	_seed_button.icon = theme.get_icon(&"RandomNumberGenerator", &"EditorIcons")
-	_export_button.icon = theme.get_icon(&"Save", &"EditorIcons")
+	var thm := EditorInterface.get_editor_theme()
+	_preset_menu.icon = thm.get_icon(&"Load", &"EditorIcons")
+	_seed_button.icon = thm.get_icon(&"RandomNumberGenerator", &"EditorIcons")
+	_export_button.icon = thm.get_icon(&"Save", &"EditorIcons")
 
 	_preset_menu.about_to_popup.connect(_on_preset_menu_about_to_popup)
 	_preset_menu.get_popup().index_pressed.connect(_on_preset_menu_index_pressed)
@@ -89,9 +89,9 @@ func _apply_preset(path: String) -> void:
 
 
 func _on_project_settings_changed() -> void:
-	var include_collisions := int(Settings.get_setting(Settings.EXPORT_INCLUDE_COLLISIONS, false))
-	var export_images := int(Settings.get_setting(Settings.EXPORT_IMAGES, false))
-	var use_external_material := int(Settings.get_setting(Settings.EXPORT_USE_EXTERNAL_MATERIAL, false))
+	var include_collisions: int = Settings.get_setting(Settings.EXPORT_INCLUDE_COLLISIONS, false)
+	var export_images: int = Settings.get_setting(Settings.EXPORT_IMAGES, false)
+	var use_external_material: int = Settings.get_setting(Settings.EXPORT_USE_EXTERNAL_MATERIAL, false)
 	_export_dialog.set_option_default(0, include_collisions)
 	_export_dialog.set_option_default(1, export_images)
 	_export_dialog.set_option_default(2, use_external_material)
@@ -116,7 +116,7 @@ func _on_preset_menu_about_to_popup() -> void:
 func _on_preset_menu_index_pressed(index: int) -> void:
 	var metadata: Variant = _preset_menu.get_popup().get_item_metadata(index)
 	if metadata is String:
-		var path: String = metadata as String
+		var path: String = metadata
 		_apply_preset(path)
 	else:
 		_preset_dialog.current_file = "%s.tres" % String(tree.name).to_snake_case()

@@ -5,11 +5,14 @@ extends RefCounted
 
 const SETTINGS_PATH: String = "cosmo_tree_gen"
 
+# generator
 const LOD1_RATIO: StringName = &"generator/lod1_ratio"
 const LOD2_RATIO: StringName = &"generator/lod2_ratio"
 const LOD1_DISTANCE: StringName = &"generator/lod1_distance"
 const LOD2_DISTANCE: StringName = &"generator/lod2_distance"
 const LOD_END_DISTANCE: StringName = &"generator/lod_end_distance"
+
+# export
 const EXPORT_EXTENSION: StringName = &"export/default_extension"
 const EXPORT_INCLUDE_COLLISIONS: StringName = &"export/default_include_collisions"
 const EXPORT_IMAGES: StringName = &"export/default_export_images"
