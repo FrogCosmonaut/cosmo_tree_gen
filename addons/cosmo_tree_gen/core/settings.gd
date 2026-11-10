@@ -10,6 +10,7 @@ const LOD1_RATIO: StringName = &"generator/lod1_ratio"
 const LOD2_RATIO: StringName = &"generator/lod2_ratio"
 const LOD1_DISTANCE: StringName = &"generator/lod1_distance"
 const LOD2_DISTANCE: StringName = &"generator/lod2_distance"
+const IMPOSTOR_DISTANCE: StringName = &"generator/impostor_distance"
 const LOD_END_DISTANCE: StringName = &"generator/lod_end_distance"
 
 # export
@@ -17,6 +18,11 @@ const EXPORT_EXTENSION: StringName = &"export/default_extension"
 const EXPORT_INCLUDE_COLLISIONS: StringName = &"export/default_include_collisions"
 const EXPORT_IMAGES: StringName = &"export/default_export_images"
 const EXPORT_USE_EXTERNAL_MATERIAL: StringName = &"export/default_use_external_material"
+
+# impostor
+const IMPOSTOR_RESOLUTION: StringName = &"impostor/resolution"
+const IMPOSTOR_AO_STRENGTH: StringName = &"impostor/ao_strength"
+const IMPOSTOR_CAST_SHADOW: StringName = &"impostor/cast_shadow"
 
 const SETTINGS: Dictionary = {
 	LOD1_RATIO: {
@@ -39,6 +45,12 @@ const SETTINGS: Dictionary = {
 	},
 	LOD2_DISTANCE: {
 		"value": 100.0,
+		"type": TYPE_FLOAT,
+		"hint": PROPERTY_HINT_RANGE,
+		"hint_string": "0.0,1000.0,0.1,or_greater,suffix:m",
+	},
+	IMPOSTOR_DISTANCE: {
+		"value": 150.0,
 		"type": TYPE_FLOAT,
 		"hint": PROPERTY_HINT_RANGE,
 		"hint_string": "0.0,1000.0,0.1,or_greater,suffix:m",
@@ -66,6 +78,22 @@ const SETTINGS: Dictionary = {
 	},
 	EXPORT_USE_EXTERNAL_MATERIAL: {
 		"value": true,
+		"type": TYPE_BOOL,
+	},
+	IMPOSTOR_RESOLUTION: {
+		"value": 512,
+		"type": TYPE_INT,
+		"hint": PROPERTY_HINT_RANGE,
+		"hint_string": "64,2048,64,or_greater,suffix:px",
+	},
+	IMPOSTOR_AO_STRENGTH: {
+		"value": 0.5,
+		"type": TYPE_FLOAT,
+		"hint": PROPERTY_HINT_RANGE,
+		"hint_string": "0.0,1.0,0.01",
+	},
+	IMPOSTOR_CAST_SHADOW: {
+		"value": false,
 		"type": TYPE_BOOL,
 	},
 }
