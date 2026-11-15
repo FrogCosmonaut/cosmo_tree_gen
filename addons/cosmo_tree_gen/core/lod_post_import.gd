@@ -15,6 +15,16 @@ func _post_import(scene: Node) -> Object:
 	for mesh: MeshInstance3D in meshes:
 		bounds = bounds.merge(mesh.mesh.get_aabb())
 
+	if scene.has_node("Impostor"):
+		var r := maxf(
+			maxf(-bounds.position.x, bounds.end.x),
+			maxf(-bounds.position.z, bounds.end.z)
+		)
+		bounds = AABB(
+			Vector3(-r, bounds.position.y, -r),
+			Vector3(2.0 * r, bounds.size.y, 2.0 * r)
+		)
+
 	for mesh: MeshInstance3D in meshes:
 		mesh.custom_aabb = bounds
 

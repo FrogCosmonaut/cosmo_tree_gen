@@ -92,9 +92,11 @@ func _on_project_settings_changed() -> void:
 	var include_collisions: int = Settings.get_setting(Settings.EXPORT_INCLUDE_COLLISIONS, false)
 	var export_images: int = Settings.get_setting(Settings.EXPORT_IMAGES, false)
 	var use_external_material: int = Settings.get_setting(Settings.EXPORT_USE_EXTERNAL_MATERIAL, false)
+	var include_impostor: int = Settings.get_setting(Settings.EXPORT_INCLUDE_IMPOSTOR, false)
 	_export_dialog.set_option_default(0, include_collisions)
 	_export_dialog.set_option_default(1, export_images)
 	_export_dialog.set_option_default(2, use_external_material)
+	_export_dialog.set_option_default(3, include_impostor)
 
 
 func _on_preset_menu_about_to_popup() -> void:

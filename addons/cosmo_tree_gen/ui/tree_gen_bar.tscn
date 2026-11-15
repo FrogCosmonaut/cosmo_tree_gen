@@ -75,12 +75,14 @@ oversampling_override = 1.0
 title = "Export Tree"
 position = Vector2i(0, 36)
 filters = PackedStringArray("*.gltf ; glTF", "*.glb ; glTF Binary")
-option_count = 3
+option_count = 4
 option_0/name = "Include Collisions"
 option_0/default = 1
 option_1/name = "Export Images"
 option_2/name = "Use External Material"
 option_2/default = 1
+option_3/name = "Include Impostor"
+option_3/default = 1
 
 [node name="PresetDialog" type="EditorFileDialog" parent="." unique_id=1600897391]
 unique_name_in_owner = true

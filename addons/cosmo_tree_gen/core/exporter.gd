@@ -5,6 +5,9 @@ extends RefCounted
 
 const LOD_POST_IMPORT: Script = preload("./lod_post_import.gd")
 
+const ImpostorGen := preload("./impostor_gen.gd")
+const Settings := preload("./settings.gd")
+
 
 static func _get_import_file(path: String) -> ConfigFile:
 	var import := ConfigFile.new()
@@ -16,7 +19,7 @@ static func _get_import_file(path: String) -> ConfigFile:
 	return import
 
 
-static func _write_import_materials(path: String, state: GLTFState) -> Error:
+static func _write_import_materials(path: String, state: GLTFState, only: Material = null) -> Error:
 	var import := _get_import_file(path)
 	if import == null:
 		return ERR_CANT_OPEN
@@ -32,6 +35,8 @@ static func _write_import_materials(path: String, state: GLTFState) -> Error:
 		# this is a bit hacky, couldn't find another way
 		if material_path.is_empty() or material_path.contains("::"):
 			continue
+		if only != null and state_materials[i] != only:
+			continue
 		materials[json_materials[i]["name"]] = {
 			"use_external/enabled": true,
 			"use_external/path": ResourceUID.path_to_uid(material_path),
@@ -43,7 +48,7 @@ static func _write_import_materials(path: String, state: GLTFState) -> Error:
 	return import.save(path + ".import")
 
 
-static func _write_import_lods(path: String, tree: CosmoTreeGen) -> Error:
+static func _write_import_lods(path: String, tree: CosmoTreeGen, impostor: MeshInstance3D) -> Error:
 	var import := _get_import_file(path)
 	if import == null:
 		return ERR_CANT_OPEN
@@ -51,13 +56,25 @@ static func _write_import_lods(path: String, tree: CosmoTreeGen) -> Error:
 	var subresources: Dictionary = import.get_value("params", "_subresources", {})
 	var nodes: Dictionary = subresources.get("nodes", {})
 
+	var impostor_distance: float = Settings.get_setting(Settings.IMPOSTOR_DISTANCE, 150.0)
+	var last_lod := tree.get_meshes(CosmoTreeGen.LOD_SUFFIXES.size() - 1 if tree.generate_lod else 0)
 	for mesh: MeshInstance3D in tree.get_meshes():
-		nodes["PATH:%s" % mesh.name] = {
-			"mesh_instance/visibility_range_begin": mesh.visibility_range_begin,
-			"mesh_instance/visibility_range_begin_margin": mesh.visibility_range_begin_margin,
-			"mesh_instance/visibility_range_end": mesh.visibility_range_end,
-			"mesh_instance/visibility_range_end_margin": mesh.visibility_range_end_margin,
-		}
+		var end := mesh.visibility_range_end
+		if impostor != null and mesh in last_lod:
+			end = impostor_distance
+		nodes["PATH:%s" % mesh.name] = _range(mesh.visibility_range_begin, end)
+
+	if impostor != null:
+		if impostor_distance <= last_lod[0].visibility_range_begin:
+			push_warning("CosmoTreeGen: the impostor distance must be greater than the last LOD distance")
+		var lod_end: float = Settings.get_setting(Settings.LOD_END_DISTANCE, 0.0)
+		var cast_shadow: bool = Settings.get_setting(Settings.IMPOSTOR_CAST_SHADOW, false)
+		var node := _range(impostor_distance, lod_end)
+		node["mesh_instance/cast_shadow"] = (
+			GeometryInstance3D.SHADOW_CASTING_SETTING_ON if cast_shadow
+			else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		)
+		nodes["PATH:%s" % impostor.name] = node
 
 	subresources["nodes"] = nodes
 	import.set_value("params", "_subresources", subresources)
@@ -66,6 +83,15 @@ static func _write_import_lods(path: String, tree: CosmoTreeGen) -> Error:
 	import.set_value("params", "meshes/generate_lods", false)
 	import.set_value("params", "import_script/path", LOD_POST_IMPORT.resource_path)
 	return import.save(path + ".import")
+
+
+static func _range(begin: float, end: float) -> Dictionary:
+	return {
+		"mesh_instance/visibility_range_begin": begin,
+		"mesh_instance/visibility_range_begin_margin": CosmoTreeGen.LOD_HYSTERESIS,
+		"mesh_instance/visibility_range_end": end,
+		"mesh_instance/visibility_range_end_margin": CosmoTreeGen.LOD_HYSTERESIS,
+	}
 
 
 static func _set_root_name(path: String, name: String) -> Error:
@@ -105,9 +131,22 @@ static func export_gltf(path: String, tree: CosmoTreeGen, options: Dictionary = 
 	):
 		return ERR_FILE_BAD_PATH
 
+	var impostor: MeshInstance3D = null
+	if options.get("Include Impostor", false):
+		impostor = await ImpostorGen.bake(tree)
+		var material := impostor.mesh.surface_get_material(0)
+		var material_path := path.get_basename() + "_impostor.res"
+		if ResourceSaver.save(material, material_path) != OK:
+			impostor.free()
+			return ERR_FILE_CANT_WRITE
+		material.take_over_path(material_path)
+
 	var exported: Array[Node] = []
 	for mesh: MeshInstance3D in tree.get_meshes():
 		exported.append(mesh.duplicate())
+
+	if impostor != null:
+		exported.append(impostor)
 
 	if options.get("Include Collisions", false):
 		for collision: StaticBody3D in tree.get_collisions():
@@ -135,11 +174,14 @@ static func export_gltf(path: String, tree: CosmoTreeGen, options: Dictionary = 
 	if err == OK:
 		err = await _wait_for_import_file(path)
 
-	if err == OK and options.get("Use External Material", false):
-		err = _write_import_materials(path, state)
+	var use_external: bool = options.get("Use External Material", false)
+	if err == OK and (use_external or impostor != null):
+		err = _write_import_materials(
+			path, state, null if use_external else impostor.mesh.surface_get_material(0)
+		)
 
-	if err == OK and tree.generate_lod:
-		err = _write_import_lods(path, tree)
+	if err == OK and (tree.generate_lod or impostor != null):
+		err = _write_import_lods(path, tree, impostor)
 
 	if err == OK:
 		err = _set_root_name(path, tree.name)
