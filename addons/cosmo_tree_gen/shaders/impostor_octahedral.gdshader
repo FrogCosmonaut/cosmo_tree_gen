@@ -3,7 +3,7 @@ Octahedral impostor shader from godot-imposter by Zhang Juntao (Godot 4 port):
 https://github.com/zhangjt93/godot-imposter
 Based on Godot-Octahedral-Impostors by wojtekpil:
 https://github.com/wojtekpil/Godot-Octahedral-Impostors
-Modified for Cosmo Tree Gen
+Modified and optimized for Cosmo Tree Gen, only using hemi octahedron.
 
 MIT License
 
@@ -31,397 +31,141 @@ SOFTWARE.
 
 shader_type spatial;
 
-render_mode blend_mix, depth_draw_opaque, cull_back, diffuse_burley, specular_schlick_ggx;
-uniform vec4 albedo : source_color = vec4(1, 1, 1, 1);
-uniform float specular = 0.5f;
-uniform float metallic = 1.0f;
-uniform float roughness : hint_range(0.0f, 1.0f) = 1.0f;
-
-uniform sampler2D imposterTextureAlbedo : source_color;
-uniform sampler2D imposterTextureNormal : hint_normal;
-uniform sampler2D imposterTextureDepth : hint_default_white;
-uniform sampler2D imposterTextureOrm : hint_default_white;
-
-uniform vec2 imposterFrames = vec2(16.0f, 16.0f);
-uniform vec3 positionOffset = vec3(0.0f);
-uniform bool isFullSphere = true;
-uniform float alpha_clamp = 0.5f;
-
+uniform sampler2D albedo_texture : source_color, filter_linear_mipmap, repeat_disable;
+uniform sampler2D normal_texture : hint_normal, filter_linear_mipmap, repeat_disable;
+uniform vec2 impostor_frames = vec2(12.0);
+uniform float scale = 1.0;
+uniform vec3 position_offset = vec3(0.0);
+uniform float alpha_scissor_threshold : hint_range(0.0, 1.0) = 0.5;
 uniform bool dither = false;
-uniform float scale = 1.0f;
-uniform float depth_scale : hint_range(0, 1) = 0.0f;
-uniform float normalmap_depth : hint_range(-5, 5)  = 1.0f;
-uniform float aabb_max = 1.0;
 uniform vec3 backlight : source_color = vec3(0.0);
+uniform float roughness : hint_range(0.0, 1.0) = 1.0;
+uniform float specular : hint_range(0.0, 1.0) = 0.5;
 
-varying vec2 uv_frame1;
-varying vec2 xy_frame1;
-varying flat vec2 frame1;
-varying flat vec3 frame1_normal;
-varying vec2 uv_frame2;
-varying vec2 xy_frame2;
-varying flat vec2 frame2;
-varying flat vec3 frame2_normal;
-varying vec2 uv_frame3;
-varying vec2 xy_frame3;
-varying flat vec2 frame3;
-varying flat vec3 frame3_normal;
+const float BAYER_4X4[16] = float[](
+	0.0625, 0.5625, 0.1875, 0.6875,
+	0.8125, 0.3125, 0.9375, 0.4375,
+	0.25, 0.75, 0.125, 0.625,
+	1.0, 0.5, 0.875, 0.375
+);
 
-varying vec4 quad_blend_weights;
+varying vec2 uv_a;
+varying vec2 uv_b;
+varying vec2 uv_c;
+varying flat vec2 frame_a;
+varying flat vec2 frame_b;
+varying flat vec2 frame_c;
+varying flat vec3 normal_a;
+varying flat vec3 normal_b;
+varying flat vec3 normal_c;
+varying flat vec3 weights;
 
-
-vec2 VecToSphereOct(vec3 pivotToCamera)
-{
-	vec3 octant = sign(pivotToCamera);
-
-	//  |x| + |y| + |z| = 1
-	float sum = dot(pivotToCamera, octant);
-	vec3 octahedron = pivotToCamera / sum;
-
-	if (octahedron.y < 0.0f)
-	{
-		vec3 absolute = abs(octahedron);
-		octahedron.xz = octant.xz * vec2(1.0f - absolute.z, 1.0f - absolute.x);
-	}
-	return octahedron.xz;
+vec2 hemi_octahedron_grid(vec3 direction) {
+	direction.y = max(direction.y, 0.001);
+	direction = normalize(direction);
+	vec3 octahedron = direction / dot(direction, sign(direction));
+	return vec2(octahedron.x + octahedron.z, octahedron.z - octahedron.x);
 }
 
-vec2 VecToHemiSphereOct(vec3 pivotToCamera)
-{
-	pivotToCamera.y = max(pivotToCamera.y, 0.001);
-	pivotToCamera = normalize(pivotToCamera);
-	vec3 octant = sign(pivotToCamera);
-
-	//  |x| + |y| + |z| = 1
-	float sum = dot(pivotToCamera, octant);
-	vec3 octahedron = pivotToCamera / sum;
-
-	return vec2(
-	octahedron.x + octahedron.z,
-	octahedron.z - octahedron.x);
+vec3 hemi_octahedron(vec2 coord) {
+	vec3 direction = vec3(coord.x - coord.y, 0.0, -1.0 + coord.x + coord.y);
+	direction.y = 1.0 - abs(direction.x) - abs(direction.z);
+	return normalize(direction);
 }
 
-
-vec2 VectorToGrid(vec3 vec)
-{
-	if (isFullSphere)
-	{
-		return VecToSphereOct(vec);
-	}
-	else
-	{
-		return VecToHemiSphereOct(vec);
-	}
+vec2 frame_uv(vec3 frame_direction, vec3 pivot_to_camera, vec3 vertex_to_camera) {
+	vec3 up = abs(frame_direction.y) > 0.999 ? vec3(0.0, 0.0, 1.0) : vec3(0.0, 1.0, 0.0);
+	vec3 plane_x = normalize(cross(frame_direction, up));
+	vec3 plane_y = normalize(cross(plane_x, frame_direction));
+	float t = dot(frame_direction, pivot_to_camera) / dot(frame_direction, vertex_to_camera);
+	vec3 offset = vertex_to_camera * t - pivot_to_camera;
+	return vec2(dot(plane_x, offset), dot(plane_y, offset)) / (2.0 * scale) + 0.5;
 }
 
-//for sphere
+void vertex() {
+	vec2 frames_minus_one = impostor_frames - 1.0;
+	vec3 camera = (inverse(MODEL_MATRIX) * vec4(INV_VIEW_MATRIX[3].xyz, 1.0)).xyz;
+	vec3 pivot_to_camera = camera * 10.0;
+	vec3 view_direction = normalize(camera);
 
-vec3 OctaSphereEnc(vec2 coord)
-{
-	coord = (coord - 0.5) * 2.0;
-	vec3 position = vec3(coord.x, 0.0f, coord.y);
-	vec2 absolute = abs(position.xz);
-	position.y = 1.0f - absolute.x - absolute.y;
-
-	if (position.y < 0.0f)
-	{
-		position.xz = sign(position.xz) * vec2(1.0f - absolute.y, 1.0f - absolute.x);
-	}
-
-	return position;
-}
-
-//for hemisphere
-vec3 OctaHemiSphereEnc(vec2 coord)
-{	
-	vec3 position = vec3(coord.x - coord.y, 0.0f, -1.0 + coord.x + coord.y);
-	vec2 absolute = abs(position.xz);
-	position.y = 1.0f - absolute.x - absolute.y;
-	return position;
-}
-
-vec3 GridToVector(vec2 coord)
-{
-	if (isFullSphere)
-	{
-		return OctaSphereEnc(coord);
-	}
-	else
-	{
-		return OctaHemiSphereEnc(coord);
-	}
-}
-
-vec3 FrameXYToRay(vec2 frame, vec2 frameCountMinusOne)
-{
-	vec2 f = (frame.xy/ frameCountMinusOne);
-
-	vec3 vec = GridToVector(f);
-	vec = normalize(vec);
-	return vec;
-}
-
-vec3 SpriteProjection(vec3 pivotToCameraRayLocal, vec2 size, vec2 loc_uv)
-{
-	vec3 z = normalize(pivotToCameraRayLocal);
-	vec3 x, y;
-	vec3 up = vec3(0,1,0);
-
-	if (abs(z.y) > 0.999f)
-	{
-		up = vec3(0,0,-1);
-	}
-
-	x = normalize(cross(up, z));
-	y = normalize(cross(x, z));
-
-	loc_uv -= vec2(0.5,0.5);
-	vec2 uv = (loc_uv) * 2.0; //-1 to 1
-
-	vec3 newX = x * uv.x;
-	vec3 newY = y * uv.y;
-
-	vec2 vecSize = size * 0.5;
-
-	newX *= vecSize.x;
-	newY *= vecSize.y;
-
-	return newX + newY;
-}
-
-vec4 quadBlendWieghts(vec2 coords)
-{
-	vec4 res;
-	/* 0 0 0
-	0 0 0
-	1 0 0 */
-	res.x = min(1.0f - coords.x, 1.0f - coords.y);
-	/* 1 0 0
-	0 0 0
-	0 0 1 */
-	res.y = abs(coords.x - coords.y);
-	/* 0 0 1
-	0 0 0
-	0 0 0 */
-	res.z = min(coords.x, coords.y);
-	/* 0 0 0
-	0 0 1
-	0 1 1 */
-	res.w = ceil(coords.x - coords.y);
-	//res.xyz /= (res.x + res.y + res.z);
-	return res;
-}
-
-vec2 virtualPlaneUV(vec3 plane_normal,vec3  plane_x, vec3  plane_y, vec3 pivotToCameraRay, vec3 vertexToCameraRay, float size)
-{
-	plane_normal = normalize(plane_normal);
-	plane_x = normalize(plane_x);
-	plane_y = normalize(plane_y);
-
-	float projectedNormalRayLength = dot(plane_normal, pivotToCameraRay);
-	float projectedVertexRayLength = dot(plane_normal, vertexToCameraRay);
-	float offsetLength = projectedNormalRayLength/projectedVertexRayLength;
-	vec3 offsetVector = vertexToCameraRay * offsetLength - pivotToCameraRay;
-
-	vec2 duv = vec2(
-				dot(plane_x , offsetVector),
-				dot(plane_y, offsetVector)
+	vec2 grid = clamp((hemi_octahedron_grid(view_direction) + 1.0) * 0.5, 0.0, 1.0) * frames_minus_one;
+	vec2 grid_fract = fract(grid);
+	frame_a = floor(grid);
+	frame_b = clamp(
+		frame_a + (grid_fract.x > grid_fract.y ? vec2(1.0, 0.0) : vec2(0.0, 1.0)),
+		vec2(0.0), frames_minus_one
+	);
+	frame_c = min(frame_a + 1.0, frames_minus_one);
+	weights = vec3(
+		min(1.0 - grid_fract.x, 1.0 - grid_fract.y),
+		abs(grid_fract.x - grid_fract.y),
+		min(grid_fract.x, grid_fract.y)
 	);
 
-	//we are in space -1 to 1
-	duv /= 2.0 * size;
-	duv += 0.5;
-	return duv;
+	vec3 direction_a = hemi_octahedron(frame_a / frames_minus_one);
+	vec3 direction_b = hemi_octahedron(frame_b / frames_minus_one);
+	vec3 direction_c = hemi_octahedron(frame_c / frames_minus_one);
+	normal_a = (MODELVIEW_MATRIX * vec4(direction_a, 0.0)).xyz;
+	normal_b = (MODELVIEW_MATRIX * vec4(direction_b, 0.0)).xyz;
+	normal_c = (MODELVIEW_MATRIX * vec4(direction_c, 0.0)).xyz;
+
+	vec3 up = abs(view_direction.y) > 0.999 ? vec3(0.0, 0.0, -1.0) : vec3(0.0, 1.0, 0.0);
+	vec3 right = normalize(cross(up, view_direction));
+	vec3 down = normalize(cross(right, view_direction));
+	vec2 corner = (UV * 2.0 - 1.0) * scale;
+	vec3 offset = right * corner.x + down * corner.y;
+
+	vec3 vertex_to_camera = pivot_to_camera - offset;
+	uv_a = frame_uv(direction_a, pivot_to_camera, vertex_to_camera);
+	uv_b = frame_uv(direction_b, pivot_to_camera, vertex_to_camera);
+	uv_c = frame_uv(direction_c, pivot_to_camera, vertex_to_camera);
+
+	VERTEX = offset + position_offset;
+	NORMAL = view_direction;
+	TANGENT = -right;
+	BINORMAL = -down;
 }
 
-void calcuateXYbasis(vec3 plane_normal, out vec3 plane_x, out vec3 plane_y)
-{
-	vec3 up = vec3(0,1,0);
-		//cross product doesnt work if we look directly from bottom
-	if (abs(plane_normal.y) > 0.999f)
-	{
-		up = vec3(0,0,1);
-	}
-	plane_x = normalize(cross(plane_normal, up));
-	plane_y = normalize(cross(plane_x, plane_normal));
+vec2 atlas_uv(vec2 uv, vec2 frame, vec2 frame_size) {
+	return clamp(frame_size * (frame + clamp(uv, 0.0, 1.0)), 0.0, 1.0);
 }
 
-vec3 projectOnPlaneBasis(vec3 ray, vec3 plane_normal, vec3 plane_x, vec3 plane_y)
-{
-	//reproject plane normal onto planeXY basos
-	return normalize(vec3( 
-		dot(plane_x,ray), 
-		dot(plane_y,ray), 
-		dot(plane_normal,ray) 
-	));
+vec3 unpack_normal(vec4 tex, vec3 tangent, vec3 binormal, vec3 normal) {
+	vec3 n = vec3(tex.xy * 2.0 - 1.0, 0.0);
+	n.z = sqrt(max(0.0, 1.0 - dot(n.xy, n.xy)));
+	n = normalize(n);
+	return normalize(tangent * n.x + binormal * n.y + normal * n.z);
 }
 
-void vertex()
-{
-	vec2 framesMinusOne = imposterFrames - vec2(1);
-	vec3 cameraPos_WS = (INV_VIEW_MATRIX * vec4(vec3(0), 1.0)).xyz;
-	vec3 cameraPos_OS = (inverse(MODEL_MATRIX) * vec4(cameraPos_WS, 1.0)).xyz;
+void fragment() {
+	vec2 frame_size = 1.0 / impostor_frames;
+	vec2 atlas_a = atlas_uv(uv_a, frame_a, frame_size);
+	vec2 atlas_b = atlas_uv(uv_b, frame_b, frame_size);
+	vec2 atlas_c = atlas_uv(uv_c, frame_c, frame_size);
 
-	//TODO: check if this is correct. We are using orho projected images, so
-	// camera far away
-	vec3 pivotToCameraRay = (cameraPos_OS) * 10.0;
-	vec3 pivotToCameraDir = normalize(cameraPos_OS);
-	
-	vec2 grid = VectorToGrid(pivotToCameraDir);
-	//bias and scale to 0 to 1
-	grid = clamp((grid + 1.0) * 0.5, vec2(0, 0), vec2(1, 1));
-	grid *= framesMinusOne;
-	grid = clamp(grid, vec2(0), vec2(framesMinusOne));
-	vec2 gridFloor = min(floor(grid), framesMinusOne);
-	vec2 gridFract = fract(grid);
-	
-	//radius * 2
-	vec2 size = vec2(2.0) * scale;
-	vec3 projected = SpriteProjection(pivotToCameraDir, size, UV);
-	vec3 vertexToCameraRay = (pivotToCameraRay - (projected));
-	vec3 vertexToCameraDir = normalize(vertexToCameraRay);
-	
-	frame1 = gridFloor;
-	quad_blend_weights = quadBlendWieghts(gridFract);
-	//convert frame coordinate to octahedron direction
-	vec3 projectedQuadADir = FrameXYToRay(frame1, framesMinusOne);
-	
-	frame2 = clamp(frame1 + mix(vec2(0, 1), vec2(1, 0), quad_blend_weights.w), vec2(0,0), framesMinusOne);
-	vec3 projectedQuadBDir = FrameXYToRay(frame2, framesMinusOne);
-	
-	frame3 = clamp(frame1 + vec2(1), vec2(0,0), framesMinusOne);
-	vec3 projectedQuadCDir = FrameXYToRay(frame3, framesMinusOne);
+	vec4 color = texture(albedo_texture, atlas_a) * weights.x
+		+ texture(albedo_texture, atlas_b) * weights.y
+		+ texture(albedo_texture, atlas_c) * weights.z;
+	vec4 tex_a = texture(normal_texture, atlas_a);
+	vec4 tex_b = texture(normal_texture, atlas_b);
+	vec4 tex_c = texture(normal_texture, atlas_c);
+	vec3 normal = unpack_normal(tex_a, TANGENT, BINORMAL, normal_a) * weights.x
+		+ unpack_normal(tex_b, TANGENT, BINORMAL, normal_b) * weights.y
+		+ unpack_normal(tex_c, TANGENT, BINORMAL, normal_c) * weights.z;
 
-	frame1_normal = (MODELVIEW_MATRIX *vec4(projectedQuadADir, 0)).xyz;
-	frame2_normal = (MODELVIEW_MATRIX *vec4(projectedQuadBDir, 0)).xyz;
-	frame3_normal = (MODELVIEW_MATRIX *vec4(projectedQuadCDir, 0)).xyz;
-
-	//calcute virtual planes projections
-	vec3 plane_x1, plane_y1, plane_x2, plane_y2, plane_x3, plane_y3;
-	calcuateXYbasis(projectedQuadADir, plane_x1, plane_y1);
-	uv_frame1 = virtualPlaneUV(projectedQuadADir, plane_x1, plane_y1, pivotToCameraRay, vertexToCameraRay, scale);
-	xy_frame1 = projectOnPlaneBasis(-vertexToCameraDir, projectedQuadADir, plane_x1, plane_y1).xy;
-
-	calcuateXYbasis(projectedQuadBDir, plane_x2, plane_y2);
-	uv_frame2 = virtualPlaneUV(projectedQuadBDir, plane_x2, plane_y2, pivotToCameraRay, vertexToCameraRay, scale);
-	xy_frame2 = projectOnPlaneBasis(-vertexToCameraDir, projectedQuadBDir, plane_x2, plane_y2).xy;
-	
-	calcuateXYbasis(projectedQuadCDir, plane_x3, plane_y3);
-	uv_frame3 = virtualPlaneUV(projectedQuadCDir, plane_x3, plane_y3, pivotToCameraRay, vertexToCameraRay, scale);
-	xy_frame3 = projectOnPlaneBasis(-vertexToCameraDir, projectedQuadCDir, plane_x3, plane_y3).xy;
-
-	//to fragment shader
-	VERTEX.xyz = projected + positionOffset;
-	VERTEX.xyz +=pivotToCameraDir* aabb_max;
-
-	NORMAL = normalize(pivotToCameraDir);
-	TANGENT= normalize(cross(NORMAL,vec3(0.0, 1.0, 0.0)));
-	BINORMAL = normalize(cross(TANGENT,NORMAL));
-}
-
-vec4 blenderColors(vec2 uv_1, vec2 uv_2, vec2 uv_3, vec4 grid_weights, sampler2D atlasTexture)
-{
-	vec4 quad_a, quad_b, quad_c;
-	
-	quad_a = texture(atlasTexture, uv_1);
-	quad_b = texture(atlasTexture, uv_2);
-	quad_c = texture(atlasTexture, uv_3);
-	return quad_a * grid_weights.x + quad_b * grid_weights.y + quad_c * grid_weights.z;
-}
-
-vec3 normal_from_normalmap(vec4 normalTex, vec3 tangent, vec3 binormal, vec3 f_norm)
-{
-	vec3 normalmap;
-	normalmap.xy = normalTex.xy * 2.0 - 1.0;
-	normalmap.z = sqrt(max(0.0, 1.0 - dot(normalmap.xy, normalmap.xy)));
-	normalmap = normalize(normalmap);
-	return normalize(tangent * normalmap.x + binormal * normalmap.y + f_norm * normalmap.z);
-}
-
-vec3 blendedNormals(vec2 uv_1, vec3 f1_n,
-					vec2 uv_2, vec3 f2_n,
-					vec2 uv_3, vec3 f3_n,
-					vec3 tangent, vec3 binormal,
-					vec4 grid_weights, sampler2D atlasTexture)
-{
-	vec4 quad_a, quad_b, quad_c;
-	quad_a = texture(atlasTexture, uv_1);
-	quad_b = texture(atlasTexture, uv_2);
-	quad_c = texture(atlasTexture, uv_3);
-	vec3 norm1 = normal_from_normalmap(quad_a, tangent, binormal, f1_n);
-	vec3 norm2 = normal_from_normalmap(quad_b, tangent, binormal, f2_n);
-	vec3 norm3 = normal_from_normalmap(quad_c, tangent, binormal, f3_n);
-	return normalize(norm1 * grid_weights.x + norm2 * grid_weights.y + norm3 * grid_weights.z);
-}
-
-vec2 recalculateUV(vec2 uv_f,  vec2 frame, vec2 xy_f, vec2 frame_size, float d_scale, sampler2D depthTexture)
-{
-	//clamp for parallax sampling
-	uv_f = clamp(uv_f, vec2(0), vec2(1));
-	vec2 uv_quad = frame_size * (frame + uv_f);
-	//paralax
-	vec4 n_depth = (textureLod( depthTexture, uv_quad, 0 ));
-	uv_f = xy_f * (0.5-n_depth.r) * d_scale + uv_f;
-	//clamp parallax offset
-	uv_f = clamp(uv_f, vec2(0), vec2(1));
-	uv_f =  frame_size * (frame + uv_f);
-	//clamped full UV
-	return clamp(uv_f, vec2(0), vec2(1));
-}
-
-void fragment()
-{
-	vec2 quad_size = vec2(1.0f) / imposterFrames;
-	vec2 uv_f1 = recalculateUV(uv_frame1, frame1, xy_frame1, quad_size, depth_scale, imposterTextureDepth);
-	vec2 uv_f2 = recalculateUV(uv_frame2, frame2, xy_frame2, quad_size, depth_scale, imposterTextureDepth);
-	vec2 uv_f3 = recalculateUV(uv_frame3, frame3, xy_frame3, quad_size, depth_scale, imposterTextureDepth);
-
-	vec4 baseTex = blenderColors(uv_f1, uv_f2,  uv_f3, quad_blend_weights, imposterTextureAlbedo);
-	vec4 ormTex = blenderColors(uv_f1, uv_f2, uv_f3, quad_blend_weights, imposterTextureOrm);
-
-	vec3 normalTex = blendedNormals(uv_f1, frame1_normal,
-								uv_f2, frame2_normal,
-								uv_f3, frame3_normal,
-								TANGENT, BINORMAL,
-								quad_blend_weights, imposterTextureNormal);
-	ALBEDO = baseTex.rgb * albedo.rgb;
-	NORMAL = normalTex.xyz;
-	BACKLIGHT = backlight * blenderColors(uv_f1, uv_f2, uv_f3, quad_blend_weights, imposterTextureNormal).a;
-
-	if(dither)
-	{
-		float opacity =  baseTex.a;
-		int x = int(FRAGCOORD.x) % 4;
-		int y = int(FRAGCOORD.y) % 4;
-		int index = x + y * 4;
-		float limit = 0.0;
-		if (x < 8) {
-			if (index == 0) limit = 0.0625;
-			if (index == 1) limit = 0.5625;
-			if (index == 2) limit = 0.1875;
-			if (index == 3) limit = 0.6875;
-			if (index == 4) limit = 0.8125;
-			if (index == 5) limit = 0.3125;
-			if (index == 6) limit = 0.9375;
-			if (index == 7) limit = 0.4375;
-			if (index == 8) limit = 0.25;
-			if (index == 9) limit = 0.75;
-			if (index == 10) limit = 0.125;
-			if (index == 11) limit = 0.625;
-			if (index == 12) limit = 1.0;
-			if (index == 13) limit = 0.5;
-			if (index == 14) limit = 0.875;
-			if (index == 15) limit = 0.375;
-		}
-		// Is this pixel below the opacity limit? Skip drawing it
-		if (opacity < limit * alpha_clamp)
-		discard;
-	}
-	else {
-		ALPHA = float(baseTex.a>alpha_clamp);
-		ALPHA_SCISSOR_THRESHOLD = 0.5;
-	}
-	METALLIC = ormTex.b * metallic;
+	ALBEDO = color.rgb;
+	NORMAL = normalize(normal);
+	BACKLIGHT = backlight * (tex_a.a * weights.x + tex_b.a * weights.y + tex_c.a * weights.z);
+	ROUGHNESS = roughness;
 	SPECULAR = specular;
-	ROUGHNESS = ormTex.g * roughness;
+
+	if (dither) {
+		int index = int(FRAGCOORD.x) % 4 + int(FRAGCOORD.y) % 4 * 4;
+		if (color.a < BAYER_4X4[index] * alpha_scissor_threshold) {
+			discard;
+		}
+	} else {
+		ALPHA = color.a;
+		ALPHA_SCISSOR_THRESHOLD = alpha_scissor_threshold;
+	}
 }
