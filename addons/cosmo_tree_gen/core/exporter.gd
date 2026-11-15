@@ -132,8 +132,9 @@ static func export_gltf(path: String, tree: CosmoTreeGen, options: Dictionary = 
 		return ERR_FILE_BAD_PATH
 
 	var impostor: MeshInstance3D = null
-	if options.get("Include Impostor", false):
-		impostor = await ImpostorGen.bake(tree)
+	var impostor_type: ImpostorGen.Type = options.get("Impostor", ImpostorGen.Type.NONE)
+	if impostor_type != ImpostorGen.Type.NONE:
+		impostor = await ImpostorGen.bake(tree, impostor_type)
 		var material := impostor.mesh.surface_get_material(0)
 		var material_path := path.get_basename() + "_impostor.res"
 		if ResourceSaver.save(material, material_path) != OK:

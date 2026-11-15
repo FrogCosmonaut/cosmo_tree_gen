@@ -81,7 +81,8 @@ option_0/default = 1
 option_1/name = "Export Images"
 option_2/name = "Use External Material"
 option_2/default = 1
-option_3/name = "Include Impostor"
+option_3/name = "Impostor"
+option_3/values = PackedStringArray("None", "Static", "Octahedral")
 option_3/default = 1
 
 [node name="PresetDialog" type="EditorFileDialog" parent="." unique_id=1600897391]

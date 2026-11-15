@@ -15,7 +15,7 @@ func _post_import(scene: Node) -> Object:
 	for mesh: MeshInstance3D in meshes:
 		bounds = bounds.merge(mesh.mesh.get_aabb())
 
-	if scene.has_node("Impostor"):
+	if scene.has_node("Impostor_LOD3"):
 		var r := maxf(
 			maxf(-bounds.position.x, bounds.end.x),
 			maxf(-bounds.position.z, bounds.end.z)

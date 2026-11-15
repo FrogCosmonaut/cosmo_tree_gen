@@ -10,6 +10,7 @@ uniform bool triplanar = false;
 uniform float triplanar_sharpness = 1.0;
 uniform float ao_strength = 0.0;
 uniform bool is_foliage = false;
+uniform vec3 normal_sign = vec3(1.0);
 uniform int output = 0;
 
 varying vec3 local_position;
@@ -44,7 +45,7 @@ void fragment() {
 	if (output == 2) {
 		ALBEDO = vec3(is_foliage ? 1.0 : 0.0);
 	} else if (output == 1) {
-		ALBEDO = normalize(FRONT_FACING ? NORMAL : -NORMAL) * 0.5 + 0.5;
+		ALBEDO = normalize(FRONT_FACING ? NORMAL : -NORMAL) * normal_sign * 0.5 + 0.5;
 	} else {
 		ALBEDO = albedo.rgb * tex.rgb * mix(1.0, COLOR.r, ao_strength);
 	}
