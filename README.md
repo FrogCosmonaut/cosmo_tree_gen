@@ -34,7 +34,7 @@ _100% Human made. No AI was or ever will be used in this project._
 	- Foliage collision: hull (covers all the foliage), spheres on each leaf/branch end.
 - Automatic LOD generation.
 	- LOD0, LOD1 and LOD2 MeshInstance3Ds can be generated with customizable ratios and distances.
-	- Billboard impostor baked on export as the last LOD: 2 triangles and 1 draw call for distant trees.
+	- Billboard impostor baked on export as the last LOD, static or octahedral: 2 triangles and 1 draw call for distant trees.
 	- The trunk is simplified and the rest of the tris budget goes to the leaves.
 	- Leaf cards are not simplified, fewer and bigger cards are kept instead.
 - Presets.
@@ -80,23 +80,27 @@ By priority.
 1. Branchlet texture generator.
 1. Graph editor.
 
-## References used
-Icosphere:
-- https://blog.lslabs.dev/posts/generating_icosphere_with_code
-- https://schneide.blog/2016/07/15/generating-an-icosphere-in-c/
+## Credits
+<details>
+<summary>Code, assets and references</summary>
 
-Trees/branching:
-- EZ-Tree author: https://tympanus.net/codrops/2025/01/27/fractals-to-forests-creating-realistic-3d-trees-with-three-js/
-- Coding Train / Dan Shiffman: https://www.youtube.com/watch?v=MwLyeEWnMCY
-- https://algorithmicbotany.org/
-- https://en.wikipedia.org/wiki/L-system
+**Code**
+- Octahedral impostor shader: [godot-imposter](https://github.com/zhangjt93/godot-imposter) by Zhang Juntao,
+  a Godot 4 port of [Godot-Octahedral-Impostors](https://github.com/wojtekpil/Godot-Octahedral-Impostors) by wojtekpil and iFire (MIT).  
+  Modified to add backlight and mipmaps. License in `addons/cosmo_tree_gen/shaders/impostor_octahedral.gdshader`.
 
-## Assets/Credits
-- Leaves: https://opengameart.org/content/60-cc0-vegetation-textures
-- Bark: https://ambientcg.com/view?id=Bark014
+**Assets**
+- Leaves: [60 CC0 vegetation textures](https://opengameart.org/content/60-cc0-vegetation-textures)
+- Bark: [ambientCG Bark014](https://ambientcg.com/view?id=Bark014)
 - Icosphere foliage: Made manually with GIMP.
-- Logo: Procreate + Inkscape
-- Logo background render: Blender
-- Logo font: Neuropol - https://www.dafont.com/es/neuropol.font
+- Logo: Procreate + Inkscape, background rendered in Blender, font [Neuropol](https://www.dafont.com/es/neuropol.font).
 
-## LICENSE - MIT License
+**References**
+- Icosphere: [lslabs](https://blog.lslabs.dev/posts/generating_icosphere_with_code), [schneide.blog](https://schneide.blog/2016/07/15/generating-an-icosphere-in-c/)
+- Trees/branching: [EZ-Tree](https://tympanus.net/codrops/2025/01/27/fractals-to-forests-creating-realistic-3d-trees-with-three-js/), [Coding Train](https://www.youtube.com/watch?v=MwLyeEWnMCY), [Algorithmic Botany](https://algorithmicbotany.org/)
+- Impostors: [ShaderBits: Octahedral Impostors](https://www.shaderbits.com/blog/octahedral-impostors), [IMP](https://github.com/MaxRoetzler/IMP)
+
+</details>
+
+## LICENSE
+MIT License
