@@ -58,15 +58,19 @@ See [Exporting](exporting.md) for what each option does.
 | `default_export_images` | `false` | Starting value of *Export Images*. |
 | `default_use_external_material` | `true` | Starting value of *Use External Material*. |
 | `default_include_impostor` | `true` | Starting value of *Include Impostor*. |
+| `default_impostor` | `Static` | Starting value of *Impostor*: None, Static or Octahedral. |
 
 ## Cosmo Tree Gen > Impostor
 
-Used when a tree is exported with *Include Impostor*. The changes apply the next time you export the tree.
+Used when a tree is exported with *Impostor* set to *Static* or *Octahedral*. The changes apply the next time you export the tree.
 
 | Setting | Default | Description |
 | ------- | ------- | ----------- |
 | `impostor_distance` | `150.0` | Distance at which the last LOD switches to the impostor: LOD2, or the tree itself if it has no LODs. With LODs it must be greater than `lod2_distance`, otherwise the export prints a warning. |
-| `resolution` | `512` | Longest side of the impostor textures, the other side follows the tree proportions. Halving it uses about 4 times less memory. |
-| `cast_shadow` | `false` | Whether the impostor casts shadows. Off by default: the billboard always faces the camera, so its shadow turns when the camera moves. |
+| `static_resolution` | `512` | *Static*: Longest side of the textures, the other side follows the tree proportions. Halving it uses about 4 times less memory. |
+| `octahedral_frames` | `12` | *Octahedral*: Views per side of the atlas, 12 * 12 = 144 views. More views make the change between angles smoother, but each view gets fewer pixels. |
+| `octahedral_resolution` | `1024` | *Octahedral*: Size of the atlas. Each view gets `octahedral_resolution / octahedral_frames` pixels, 84 px with the default values. Halving it uses about 4 times less memory. |
+| `cast_shadow` | `false` | Whether the impostor casts shadows. Off by default: the *Static* shadow turns when the camera moves, and the *Octahedral* one also darkens the impostor itself. |
 
 Note: `DirectionalLight3D` only draws shadows up to its `directional_shadow_max_distance` (100 m by default), so with the default `impostor_distance` the impostor shadow won't show even with `cast_shadow` on.
+Note: with the default values, a *Static* impostor uses about 0.5 MB of video memory and an *Octahedral* one about 2.7 MB

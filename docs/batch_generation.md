@@ -132,7 +132,7 @@ tree.generate()
 var options: Dictionary = {
 	"Include Collisions": true,
 	"Use External Material": true,
-	"Include Impostor": true,
+	"Impostor": 1,
 }
 var err := await tree.export_gltf(path, options)
 ```
@@ -141,4 +141,5 @@ var err := await tree.export_gltf(path, options)
 - `collision_max_height` is in meters. If the height changes between trees, use a fraction of `trunk_params.height`, after the variations.
 - Collisions are only exported with `"Include Collisions": true`.
 - The LOD distances and ratios are the same for the whole batch, they come from the [settings](settings.md).
-- The impostor is only baked with `"Include Impostor": true`. Each tree gets its own `<file>_impostor.res`, and its export takes around 0.1–0.2 s longer.
+- The impostor is only baked with `"Impostor": 1` (Static) or `2` (Octahedral). Each tree gets its own `<file>_impostor.res`,  
+  and its export takes around 0.1-0.2s longer with Static, and around 0.6s with Octahedral.

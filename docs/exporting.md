@@ -23,8 +23,12 @@ The default value of each option can be changed in the [settings](settings.md).
   This is recommended, glTF can't store shaders, so without it the leaves lose the wind sway shader.  
   Also, any change to your materials will apply to all the exported trees.  
   Note: only materials saved as their own file are linked, built-in materials are exported as usual.
-- *Include Impostor*: Bakes a billboard of the tree and adds it as the last LOD. Default on.  
-  The billboard is a quad that always faces the camera, with 2 textures (albedo and normal) baked from LOD0.  
+- *Impostor*: Bakes a billboard of the tree and adds it as the last LOD. Default *Static*.
+  - *None*: No impostor will be generated.
+  - *Static*: A quad that turns around its vertical axis to face the camera, with one view of the tree captured from the front.
+  - *Octahedral*: A quad that faces the camera from any angle and blends between views of the tree captured from the side to straight above (144 with the default settings).  
+    It looks right from every side and from above, but uses more memory, see the [settings](settings.md#cosmo-tree-gen--impostor).
+
   Its material is saved next to the glTF as `<file>_impostor.res`, and it's always linked as an external material,  
   even with "Use External Material" off.
 
@@ -34,17 +38,17 @@ The exported scene has the same nodes as the `CosmoTreeGen` node, and the root n
 - *CosmoTree*: Trunk and foliage combined in one mesh.  
   If `combine_trunk_and_foliage` is off, there are two meshes instead: *Trunk* and *Foliage*.
 - *_LOD0*, *_LOD1*, *_LOD2*: If `generate_lod` is on, each mesh has one of these suffixes.
-- *Impostor*: If `Include Impostor` is on, the impostor is generated during the export.
+- *Impostor*: If "Impostor" isn't None, the impostor is generated during the export.
 - *Collision* and *FoliageCollision*: If "Include Collisions" is on.
 
 ## LODs and impostor
-If `generate_lod` or *Include Impostor* is on, the exporter also changes the `.import` file of the tree:
+If `generate_lod` or *Include Impostor* isn't None, the exporter also changes the `.import` file of the tree:
 - Sets the visibility ranges of each LOD and the impostor, using the distances from the [settings](settings.md#example-with-the-default-settings).  
   With an impostor, the last LOD (LOD2, or the tree itself if it has no LODs) ends at `impostor_distance`.
 - Sets the `cast_shadow` of the impostor from the settings.
 - Disables Godot's automatic LOD generation (`meshes/generate_lods`), because it breaks the leaf cards. Don't turn it back on.
 - Adds an import script (`lod_post_import.gd`) that restores the `custom_aabb` of the LODs, so they all swap at the same distance.  
-  With an impostor, the box is made square on X and Z, so the billboard isn't cut at the screen edges when it turns.
+  With an impostor, the box is wider, so the billboard isn't cut at the screen edges when it turns.
 
 Note: if you change the LOD or impostor settings, you need to export the tree again.  
 Note: the impostor is baked on every export. With *Use External Material*, changes to your materials reach the exported LODs, but not the impostor: it keeps what it was baked with until you export again.  
@@ -61,19 +65,25 @@ tree.generate()
 var options: Dictionary = {
 	"Include Collisions": true,
 	"Use External Material": true,
-	"Include Impostor": true,
+	"Impostor": 2,
 }
 var err := await tree.export_gltf("res://trees/ash.glb", options)
 ```
 
 - If you create the tree from code, call `generate()` before exporting.
+- `"Impostor"` takes the index of the option: `0` None, `1` Static, `2` Octahedral.
 - Missing options are off, the default values from the settings are only used by the export window.
 - It only works in the editor.
 
 See `demo/batch_generator.gd` for a full example.
 
+Note: the impostor material uses `impostor_static.gdshader` or `impostor_octahedral.gdshader` from `addons/cosmo_tree_gen/shaders/`, copy them or keep the addon in your project.
+
 ## Known issues / Limitations
 - *Export Images*: The textures are saved without a name (`.png`).
-- *Include Impostor*: It's a single view of the tree, captured from the front (+Z).  
-  It looks the same from every side, like a thin card when seen from above, and it has no wind.
-- *Include Impostor*: Exporting again without it doesn't delete the old `<file>_impostor.res`.
+- *Impostor*: It has no wind.
+- *Impostor* - *Static*: It's a single view of the tree, captured from the front (+Z).  
+  It looks the same from every side, and like a thin card when seen from above.
+- *Impostor* - *Octahedral*: With `cast_shadow` on, its shadow on the ground follows the shape of the tree,  
+  but the impostor also shadows itself and part of the canopy turns dark.
+- *Impostor*: Exporting again with *None* doesn't delete the old `<file>_impostor.res`.
