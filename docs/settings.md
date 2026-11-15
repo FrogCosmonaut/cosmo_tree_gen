@@ -5,7 +5,8 @@ They're on `Project Settings > General > Cosmo Tree Gen`.
 
 ## Cosmo Tree Gen > Generator
 These settings control the automatic LODs and apply to every tree in the project.  
-They only have an effect on trees with `generate_lod` enabled. 
+They only have an effect on trees with `generate_lod` enabled, except `lod_end_distance`, 
+which also applies to trees exported with an impostor.
 
 Trees don't update by themselves when you change a setting: press **Generate tree** on each
 `CosmoTreeGen` node to apply it. Trees you already exported need to be exported again.  
@@ -16,7 +17,7 @@ Trees don't update by themselves when you change a setting: press **Generate tre
 | `lod2_ratio` | `0.15` | Triangle budget for LOD2, as a fraction of LOD0's triangles. |
 | `lod1_distance` | `50 m` | Distance at which LOD0 switches to LOD1. |
 | `lod2_distance` | `100 m` | Distance at which LOD1 switches to LOD2. |
-| `lod_end_distance` | `0 m` | Distance at which LOD2 stops being drawn. `0` keeps it visible at any distance. |
+| `lod_end_distance` | `0 m` | Distance at which the last LOD stops being drawn: the impostor if the tree was exported with one, otherwise LOD2. `0` keeps it visible at any distance. |
 
 ### How the triangle budget works
 Each LOD gets a budget of `LOD0 triangles × ratio`. The trunk takes its share first, and the
@@ -37,10 +38,11 @@ A tree without foliage spends the whole budget on the trunk.
 ### Example with the default settings
 - LOD0: Will be visible from 0 to 50 meters.
 - LOD1: Will be visible from 50 to 100 meters.
-- LOD2: Will be visible from 100 meters to infinity.
+- LOD2: Will be visible from 100 meters to infinity, or to 150 meters if the tree is exported with an impostor.
+- Impostor: Will be visible from 150 meters to infinity.
 
-Note: This addon sets the `custom_aabb` of each LOD so the transition between them is as seamless as possible. It uses a Post Import script on the exported trees to achieve it: `lod_post_import.gd`.  
-Note: LOD3 / impostor is planned to be implemented with an billboard/octahedral impostor. See more about that [here](https://cosmonautfrog.es/blog/asset-optimization-in-godot/).  
+Note: This addon sets the `custom_aabb` of each LOD so the transition between them is as seamless as possible.  
+It uses a Post Import script on the exported trees to achieve it: `lod_post_import.gd`.  
 
 See [Visibility ranges (HLOD)](https://docs.godotengine.org/en/stable/tutorials/3d/visibility_ranges.html) for more info amout how LOD works.  
 
@@ -55,3 +57,16 @@ See [Exporting](exporting.md) for what each option does.
 | `default_include_collisions` | `true` | Starting value of *Include Collisions*. |
 | `default_export_images` | `false` | Starting value of *Export Images*. |
 | `default_use_external_material` | `true` | Starting value of *Use External Material*. |
+| `default_include_impostor` | `true` | Starting value of *Include Impostor*. |
+
+## Cosmo Tree Gen > Impostor
+
+Used when a tree is exported with *Include Impostor*. The changes apply the next time you export the tree.
+
+| Setting | Default | Description |
+| ------- | ------- | ----------- |
+| `impostor_distance` | `150.0` | Distance at which the last LOD switches to the impostor: LOD2, or the tree itself if it has no LODs. With LODs it must be greater than `lod2_distance`, otherwise the export prints a warning. |
+| `resolution` | `512` | Longest side of the impostor textures, the other side follows the tree proportions. Halving it uses about 4 times less memory. |
+| `cast_shadow` | `false` | Whether the impostor casts shadows. Off by default: the billboard always faces the camera, so its shadow turns when the camera moves. |
+
+Note: `DirectionalLight3D` only draws shadows up to its `directional_shadow_max_distance` (100 m by default), so with the default `impostor_distance` the impostor shadow won't show even with `cast_shadow` on.

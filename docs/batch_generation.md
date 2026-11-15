@@ -112,7 +112,7 @@ Some tips:
 - Be careful with integers like `count` or `leaf_count`: adding `randi_range(-3, 3)` to a small value can go below the minimum.
 - The range of each parameter is in [Parameters](parameters.md).
 
-## Collisions, LODs and materials
+## Collisions, LODs, impostor and materials
 Presets don't save `generate_lod` or the collision parameters, so set them in your script.  
 You can also give the whole batch your own materials:
 
@@ -132,6 +132,7 @@ tree.generate()
 var options: Dictionary = {
 	"Include Collisions": true,
 	"Use External Material": true,
+	"Include Impostor": true,
 }
 var err := await tree.export_gltf(path, options)
 ```
@@ -140,3 +141,4 @@ var err := await tree.export_gltf(path, options)
 - `collision_max_height` is in meters. If the height changes between trees, use a fraction of `trunk_params.height`, after the variations.
 - Collisions are only exported with `"Include Collisions": true`.
 - The LOD distances and ratios are the same for the whole batch, they come from the [settings](settings.md).
+- The impostor is only baked with `"Include Impostor": true`. Each tree gets its own `<file>_impostor.res`, and its export takes around 0.1–0.2 s longer.

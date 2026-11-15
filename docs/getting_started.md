@@ -25,10 +25,10 @@ Once activated, some extra settings will be added to `Project Settings > General
 1. Optionally, enable `generate_lod` for LODs and set `collision_type` and/or `foliage_collision_type` for collisions.  
    If none of them are set, "Include Collisions" won't export anything. [More info about LODs](settings.md)
 1. Once you're happy with your tree, click `Export glb/glTF`.
-1. A save window will pop up, there are three extra options there: "Include Collisions", "Export Images" and "Use External Material". [More info about export options](exporting.md)
+1. A save window will pop up, there are four extra options there: "Include Collisions", "Export Images", "Use External Material" and "Include Impostor". [More info about export options](exporting.md)
 1. Save it to the desired folder, and that's all.  
    The tree will appear in the FileSystem already imported. Now you can use the `glb/glTF` as is or as `New Inherited Scene`.  
-   If it has LODs, they will swap automatically with the distance.
+   If it has LODs or an impostor, they will swap automatically with the distance.
 
 ## Next steps
 - You don't need to export the tree, the `CosmoTreeGen` node can be used as is for quick prototyping.  
