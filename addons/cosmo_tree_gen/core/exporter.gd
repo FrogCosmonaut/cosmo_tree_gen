@@ -75,6 +75,9 @@ static func _set_root_name(path: String, name: String) -> Error:
 
 
 static func _wait_for_import_file(path: String) -> Error:
+	if FileAccess.file_exists(path + ".import"):
+		return OK
+
 	var fs := EditorInterface.get_resource_filesystem()
 	var tree := Engine.get_main_loop() as SceneTree
 	var res_path := ProjectSettings.localize_path(path)
