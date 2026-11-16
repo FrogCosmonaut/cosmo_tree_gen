@@ -38,7 +38,7 @@ _100% Human made. No AI was or ever will be used in this project._
 	- Foliage collision: hull (covers all the foliage), spheres on each leaf/branch end.
 - Automatic LOD generation.
 	- LOD0, LOD1 and LOD2 MeshInstance3Ds can be generated with customizable ratios and distances.
-	- Billboard impostor baked on export as the last LOD, static or octahedral: 2 triangles and 1 draw call for distant trees.
+	- Billboard impostor baked on export as the last LOD, static or octahedral: 2 triangles and 1 draw call for distant trees. See [Impostor types](docs/exporting.md#impostor-types)
 	- The trunk is simplified and the rest of the tris budget goes to the leaves.
 	- Leaf cards are not simplified, fewer and bigger cards are kept instead.
 - Presets.

@@ -53,6 +53,32 @@ If `generate_lod` or *Impostor* isn't None, the exporter also changes the `.impo
 Note: if you change the LOD or impostor settings, you need to export the tree again.  
 Note: the impostor is baked on every export. With *Use External Material*, changes to your materials reach the exported LODs, but not the impostor: it keeps what it was baked with until you export again.  
 
+### Impostor types
+These gifs show the difference between the *Static* and *Octahedral* impostors.  
+
+*Static* is a single picture of the tree on a quad that turns around its vertical axis to face the camera.
+It looks right from the side, but from above you see the card edge-on, so it doesn't work for games with a top-down or high camera.  
+
+![Static Impostor GIF](../.github/images/example_static_impostor.gif)
+
+*Octahedral* uses the same quad, but bakes 144 views of the tree into an atlas and blends the 3 closest to the camera angle,
+so it holds up from any angle above the ground. Each view has less resolution than the *Static* texture (84 px vs 512 px with the default settings), 
+but it's barely noticeable from a distance.
+
+![Octahedral Impostor GIF](../.github/images/example_octahedral_impostor.gif)
+
+**Which one to choose?**  
+
+Use *Static* if the camera stays close to the ground, like in first or third person games,
+or if you need to save memory: with the default settings its texture has about 5 times fewer pixels than the *Octahedral* atlas.  
+
+Use *Octahedral* if the camera goes up or orbits around the trees, like in strategy,
+flight or city-builder games. It looks right from any angle above the ground, and with `cast_shadow` on, its shadow also follows the shape of the tree.
+
+Side to side comparison.  
+
+![Impostor Comparison GIF](../.github/images/impostor_comparison.gif)
+
 ## Exporting from scripts
 Trees can also be exported from a `@tool` script with `export_gltf()`. The options use the same names as in the export window:
 
