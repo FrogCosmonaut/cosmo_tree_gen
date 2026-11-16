@@ -38,11 +38,11 @@ The exported scene has the same nodes as the `CosmoTreeGen` node, and the root n
 - *CosmoTree*: Trunk and foliage combined in one mesh.  
   If `combine_trunk_and_foliage` is off, there are two meshes instead: *Trunk* and *Foliage*.
 - *_LOD0*, *_LOD1*, *_LOD2*: If `generate_lod` is on, each mesh has one of these suffixes.
-- *Impostor*: If "Impostor" isn't None, the impostor is generated during the export.
+- *Impostor_LOD3*: If "Impostor" isn't None, the impostor is generated during the export.
 - *Collision* and *FoliageCollision*: If "Include Collisions" is on.
 
 ## LODs and impostor
-If `generate_lod` or *Include Impostor* isn't None, the exporter also changes the `.import` file of the tree:
+If `generate_lod` or *Impostor* isn't None, the exporter also changes the `.import` file of the tree:
 - Sets the visibility ranges of each LOD and the impostor, using the distances from the [settings](settings.md#example-with-the-default-settings).  
   With an impostor, the last LOD (LOD2, or the tree itself if it has no LODs) ends at `impostor_distance`.
 - Sets the `cast_shadow` of the impostor from the settings.
@@ -52,7 +52,6 @@ If `generate_lod` or *Include Impostor* isn't None, the exporter also changes th
 
 Note: if you change the LOD or impostor settings, you need to export the tree again.  
 Note: the impostor is baked on every export. With *Use External Material*, changes to your materials reach the exported LODs, but not the impostor: it keeps what it was baked with until you export again.  
-Note: the impostor material uses `addons/cosmo_tree_gen/shaders/impostor_static.gdshader`, keep the addon in your project.
 
 ## Exporting from scripts
 Trees can also be exported from a `@tool` script with `export_gltf()`. The options use the same names as in the export window:

@@ -112,7 +112,7 @@ angle = 90.0
 length = 0.271
 segments = 5
 gnarl = 1.2
-up_force = -0.3999999999999999
+up_force = -0.8370000000000002
 metadata/_custom_type_script = "uid://ceh6ii6tlpph4"
 
 [sub_resource type="Resource" id="Resource_fy1p0"]
@@ -406,37 +406,39 @@ metadata/_custom_type_script = "uid://c0ggn4wsaa746"
 [sub_resource type="Resource" id="Resource_u5t42"]
 script = ExtResource("3_cpj4b")
 count = 7
+terminal = true
 start = 0.8
 end = 1.0
 angle = 60.0
 length = 0.95
-radius = 0.7
-up_force = 0.15
+radius = 0.703
+up_force = 0.07800000000000029
 metadata/_custom_type_script = "uid://ceh6ii6tlpph4"
 
 [sub_resource type="Resource" id="Resource_5de16"]
 script = ExtResource("3_cpj4b")
-count = 8
+count = 3
 terminal = true
 start = 0.1
 end = 1.0
-angle = 70.0
-length = 1.0
-radius = 0.4
-segments = 6
+angle = 67.955
+length = 0.8280000000000001
+radius = 0.7999999999999999
+segments = 8
 gnarl = 0.1
-up_force = -2.0
+up_force = -3.059
 metadata/_custom_type_script = "uid://ceh6ii6tlpph4"
 
 [sub_resource type="Resource" id="Resource_h5sl1"]
 script = ExtResource("4_fxgjp")
 type = 2
-leaf_count = 20
 leaf_tip = true
-leaf_size = 0.5
+leaf_size = 2.48
+leaf_aspect = 0.3
 leaf_size_variance = 0.2
 leaf_start = 0.0
-leaf_angle = 15.0
+leaf_position_offset = Vector3(0, 0.3, 0)
+leaf_gravity = 0.9
 leaf_canopy_normals = 0.7
 leaf_inner_ao = 0.4
 metadata/_custom_type_script = "uid://1tt4by0vsl04"
@@ -529,7 +531,6 @@ transform = Transform3D(1, 0, 0, 0, 0.9961947, 0.08715574, 0, -0.08715574, 0.996
 mesh = SubResource("PlaneMesh_nwdni")
 
 [node name="Icospheres" type="Node3D" parent="." unique_id=1538727374]
-visible = false
 
 [node name="LowPolyTree" type="Node3D" parent="Icospheres" unique_id=2106527168]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.7686777, 0, 0)
@@ -564,14 +565,13 @@ metadata/_custom_type_script = "uid://thf11ljosiks"
 
 [node name="Ash" type="Node3D" parent="CardLeaves" unique_id=1925701942]
 script = ExtResource("1_cycnu")
-noise_seed = -731791487
+noise_seed = 1931204211
 trunk_params = SubResource("Resource_fy1p0")
 branch_levels = Array[ExtResource("3_cpj4b")]([SubResource("Resource_mj7pe"), SubResource("Resource_t8a6q"), SubResource("Resource_5eeob")])
 foliage_params = SubResource("Resource_qu3ut")
 generate_lod = true
 collision_type = 3
-collision_level = 1
-collision_max_height = 3.0
+collision_max_height = 2.5
 foliage_collision_type = 1
 preview_collision = true
 trunk_material = ExtResource("5_cpj4b")
@@ -610,7 +610,6 @@ noise_seed = -1983353351
 trunk_params = SubResource("Resource_62gnj")
 branch_levels = Array[ExtResource("3_cpj4b")]([SubResource("Resource_vkopi"), SubResource("Resource_qvfii")])
 foliage_params = SubResource("Resource_8rfdr")
-preview_collision = true
 trunk_material = ExtResource("5_cpj4b")
 foliage_material = ExtResource("10_fxgjp")
 metadata/_custom_type_script = "uid://thf11ljosiks"
@@ -659,7 +658,7 @@ branch_levels = Array[ExtResource("3_cpj4b")]([SubResource("Resource_u5t42"), Su
 foliage_params = SubResource("Resource_h5sl1")
 preview_collision = true
 trunk_material = ExtResource("5_cpj4b")
-foliage_material = ExtResource("14_nk31j")
+foliage_material = ExtResource("11_1rqa4")
 metadata/_custom_type_script = "uid://thf11ljosiks"
 
 [node name="WinterOak" type="Node3D" parent="CardLeaves" unique_id=345297676]
