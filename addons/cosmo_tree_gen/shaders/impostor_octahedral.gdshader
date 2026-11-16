@@ -40,7 +40,7 @@ uniform float alpha_scissor_threshold : hint_range(0.0, 1.0) = 0.5;
 uniform bool dither = false;
 uniform vec3 backlight : source_color = vec3(0.0);
 uniform float roughness : hint_range(0.0, 1.0) = 1.0;
-uniform float specular : hint_range(0.0, 1.0) = 0.5;
+uniform float specular : hint_range(0.0, 1.0) = 0.2;
 
 const float BAYER_4X4[16] = float[](
 	0.0625, 0.5625, 0.1875, 0.6875,
@@ -131,9 +131,7 @@ vec2 atlas_uv(vec2 uv, vec2 frame, vec2 frame_size) {
 }
 
 vec3 unpack_normal(vec4 tex, vec3 tangent, vec3 binormal, vec3 normal) {
-	vec3 n = vec3(tex.xy * 2.0 - 1.0, 0.0);
-	n.z = sqrt(max(0.0, 1.0 - dot(n.xy, n.xy)));
-	n = normalize(n);
+	vec3 n = normalize(tex.xyz * 2.0 - 1.0);
 	return normalize(tangent * n.x + binormal * n.y + normal * n.z);
 }
 
