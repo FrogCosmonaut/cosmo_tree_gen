@@ -41,30 +41,33 @@ static func _fill_flat(
 ## otherwise each LOD keeps the whole LOD0 vertex buffer.
 static func _remove_unused_vertices(arrays: Array) -> Array:
 	var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
-	var vertex_count: int = arrays[Mesh.ARRAY_VERTEX].size()
+	var vertex_array: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	var vertex_count := vertex_array.size()
 
-	var remap := PackedInt32Array()
-	remap.resize(vertex_count)
-	remap.fill(-1)
+	var index_map := PackedInt32Array()
+	index_map.resize(vertex_count)
+	index_map.fill(-1)
 	var used := PackedInt32Array()
 	var new_indices := PackedInt32Array()
 	new_indices.resize(indices.size())
 
 	for i in indices.size():
 		var old := indices[i]
-		if remap[old] == -1:
-			remap[old] = used.size()
+		if index_map[old] == -1:
+			index_map[old] = used.size()
 			used.push_back(old)
-		new_indices[i] = remap[old]
+		new_indices[i] = index_map[old]
 
 	var out := []
 	out.resize(Mesh.ARRAY_MAX)
 	out[Mesh.ARRAY_INDEX] = new_indices
-	for attribute in [Mesh.ARRAY_VERTEX, Mesh.ARRAY_NORMAL, Mesh.ARRAY_TEX_UV]:
+	for attribute: int in [Mesh.ARRAY_VERTEX, Mesh.ARRAY_NORMAL, Mesh.ARRAY_TEX_UV]:
 		var old_values: Variant = arrays[attribute]
 		if old_values == null:
 			continue
+		@warning_ignore("unsafe_method_access")
 		var new_values: Variant = old_values.duplicate()
+		@warning_ignore("unsafe_method_access")
 		new_values.resize(used.size())
 		for i in used.size():
 			new_values[i] = old_values[used[i]]
@@ -92,7 +95,8 @@ static func _smooth_normals(vertices: PackedVector3Array, indices: PackedInt32Ar
 		welded[vertices[i]] = welded.get(vertices[i], Vector3.ZERO) + normals[i]
 
 	for i in normals.size():
-		normals[i] = welded[vertices[i]].normalized()
+		var normal: Vector3 = welded[vertices[i]]
+		normals[i] = normal.normalized()
 	return normals
 
 
@@ -189,7 +193,8 @@ static func get_albedo_texture(material: Material) -> Texture2D:
 	if material is BaseMaterial3D:
 		return (material as BaseMaterial3D).albedo_texture
 	if material is ShaderMaterial:
-		return (material as ShaderMaterial).get_shader_parameter("albedo_texture") as Texture2D
+		var texture: Texture2D = (material as ShaderMaterial).get_shader_parameter("albedo_texture")
+		return texture
 	return null
 
 
@@ -242,14 +247,13 @@ static func count_triangles(mesh: ArrayMesh) -> int:
 
 static func flatten_mesh(mesh: Mesh) -> ArrayMesh:
 	var src := mesh.surface_get_arrays(0)
-	var uvs = src[Mesh.ARRAY_TEX_UV]
-	var result := build_mesh(
-		src[Mesh.ARRAY_VERTEX],
-		src[Mesh.ARRAY_INDEX],
-		true,
-		uvs if uvs != null else PackedVector2Array(),
-	)
-	result.surface_set_name(0, mesh.surface_get_name(0))
+	var vertices: PackedVector3Array = src[Mesh.ARRAY_VERTEX]
+	var indices: PackedInt32Array = src[Mesh.ARRAY_INDEX]
+	var uvs := PackedVector2Array()
+	if src[Mesh.ARRAY_TEX_UV] != null:
+		uvs = src[Mesh.ARRAY_TEX_UV]
+	var result := build_mesh(vertices, indices, true, uvs)
+	result.surface_set_name(0, (mesh as ArrayMesh).surface_get_name(0))
 	result.surface_set_material(0, mesh.surface_get_material(0))
 	return result
 

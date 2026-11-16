@@ -212,17 +212,19 @@ static func build(tree: CosmoTreeGen) -> Result:
 	# Flat shading
 	if tree.flat_shading:
 		for level: Array in levels:
-			if level[0] != null:
-				level[0] = MeshUtils.flatten_mesh(level[0])
-			if level[1] != null and tree.foliage_params.type == CosmoFoliageParams.Type.ICOSPHERES:
-				level[1] = MeshUtils.flatten_mesh(level[1])
+			var trunk: Mesh = level[0]
+			var foliage: Mesh = level[1]
+			if trunk != null:
+				level[0] = MeshUtils.flatten_mesh(trunk)
+			if foliage != null and tree.foliage_params.type == CosmoFoliageParams.Type.ICOSPHERES:
+				level[1] = MeshUtils.flatten_mesh(foliage)
 
 	# Combine, every level gets a LOD even if empty, so the indices stay the LOD levels
 	for level: Array in levels:
 		var lod := LOD.new()
 		if tree.combine_trunk_and_foliage:
 			var parts: Array[ArrayMesh] = [level[0], level[1]]
-			parts = parts.filter(func(x) -> bool: return x != null)
+			parts = parts.filter(func(x: ArrayMesh) -> bool: return x != null)
 			if not parts.is_empty():
 				lod.meshes[Part.COMBINED] = MeshUtils.combine_meshes(parts)
 		else:
