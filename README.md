@@ -4,6 +4,8 @@
 
 Procedural tree generator for Godot 4. Create and tweak trees live in the editor, save them as presets, and export them to glb/glTF with LODs and collisions.
 
+Also available on: [Godot Asset Store](https://store.godotengine.org/asset/cosmonaut-frog/cosmo-tree-gen/) - [Godot Asset Library](https://godotengine.org/asset-library/asset/5594)
+
 Mainly inspired by Dan Shiffman and EZTree.  
 
 _100% Human made. No AI was or ever will be used in this project._  
@@ -15,6 +17,8 @@ _100% Human made. No AI was or ever will be used in this project._
 | ![presets](.github/images/example_presets.gif) | ![seed](.github/images/example_lean_wobble_seed.gif) |
 | **Live generation** | **Curve editor for fine changes** |
 | ![livegen](.github/images/example_leaf_size.gif) | ![curves](.github/images/example_curve.gif) |
+
+[More videos](https://www.youtube.com/@cosmonautfrogstudios/videos)
 
 ## Features
 - Live generation and auto-updated in the editor.
@@ -103,4 +107,4 @@ By priority.
 </details>
 
 ## LICENSE
-MIT License
+Released under the [MIT License](LICENSE.md).
