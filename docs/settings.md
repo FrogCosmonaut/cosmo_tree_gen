@@ -57,7 +57,6 @@ See [Exporting](exporting.md) for what each option does.
 | `default_include_collisions` | `true` | Starting value of *Include Collisions*. |
 | `default_export_images` | `false` | Starting value of *Export Images*. |
 | `default_use_external_material` | `true` | Starting value of *Use External Material*. |
-| `default_impostor` | `true` | Starting value of *Impostor*. |
 | `default_impostor` | `Static` | Starting value of *Impostor*: None, Static or Octahedral. |
 
 ## Cosmo Tree Gen > Impostor
