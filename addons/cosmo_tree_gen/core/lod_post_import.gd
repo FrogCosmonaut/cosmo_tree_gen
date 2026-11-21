@@ -11,6 +11,11 @@ func _post_import(scene: Node) -> Object:
 			return child is MeshInstance3D
 	)
 
+	var collisions := scene.get_children().filter(
+		func(child: Node) -> bool:
+			return child is StaticBody3D
+	)
+
 	var bounds := AABB()
 	for mesh: MeshInstance3D in meshes:
 		bounds = bounds.merge(mesh.mesh.get_aabb())
@@ -27,5 +32,11 @@ func _post_import(scene: Node) -> Object:
 
 	for mesh: MeshInstance3D in meshes:
 		mesh.custom_aabb = bounds
+		mesh.add_to_group(&"cosmo_tree_mesh", true)
+
+	for col: StaticBody3D in collisions:
+		col.add_to_group(&"cosmo_tree_collision", true)
+
+	scene.add_to_group(&"cosmo_tree", true)
 
 	return scene
