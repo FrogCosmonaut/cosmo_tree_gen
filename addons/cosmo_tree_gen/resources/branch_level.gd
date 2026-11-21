@@ -7,7 +7,7 @@ extends Resource
 ## or from the trunks for the first one.
 
 ## Branches grown from each parent branch, spread around it between [member start] and [member end].
-@export_range(0, 60) var count: int = 6:
+@export_range(0, 60, 1, "or_greater") var count: int = 6:
 	set(value):
 		count = value
 		emit_changed()
@@ -29,7 +29,7 @@ extends Resource
 		end = value
 		emit_changed()
 ## Angle between the branches and their parent, in degrees. 0 grows them along the parent, 90 perpendicular.
-@export_range(0.0, 90.0) var angle: float = 50.0:
+@export_range(0.0, 90.0, 0.5, "or_greater") var angle: float = 50.0:
 	set(value):
 		angle = value
 		emit_changed()
@@ -50,7 +50,7 @@ extends Resource
 		emit_changed()
 ## Radius of the branches at their base, as a fraction of the parent radius where they grow. [br][br]
 ## Branches taper to 20% of it at the tip. Terminal branches keep the parent radius instead.
-@export_range(0.1, 0.8) var radius: float = 0.6:
+@export_range(0.05, 0.8, 0.05) var radius: float = 0.6:
 	set(value):
 		radius = value
 		emit_changed()
@@ -61,13 +61,13 @@ extends Resource
 		segments = value
 		emit_changed()
 ## Random bending of the branches. 0 keeps them straight.
-@export_range(0.0, 2.0) var gnarl: float = 0.3:
+@export_range(0.0, 2.0, 0.01, "or_greater") var gnarl: float = 0.3:
 	set(value):
 		gnarl = value
 		emit_changed()
 ## Bends the branches up when positive, or down when negative, like a willow. [br][br]
 ## Broken branches always bend down. See [member broken_chance].
-@export_range(-4.0, 4.0) var up_force: float = 0.5:
+@export_range(-4.0, 4.0, 0.01, "or_greater", "or_less") var up_force: float = 0.5:
 	set(value):
 		up_force = value
 		emit_changed()

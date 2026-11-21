@@ -32,22 +32,22 @@ enum Type {
 		icosphere_length_influence = value
 		emit_changed()
 ## Radius of the icospheres, in meters, before [member icosphere_length_influence].
-@export_range(0.1, 5.0, 0.01, "suffix:m") var icosphere_radius: float = 1.0:
+@export_range(0.1, 5.0, 0.01, "suffix:m", "or_greater") var icosphere_radius: float = 1.0:
 	set(value):
 		icosphere_radius = value
 		emit_changed()
 ## Detail of the icospheres, each level has 4 times the triangles: 20, 80, 320, 1280 and 5120 per icosphere.
-@export_range(0, 4) var icosphere_subdivisions: int = 1:
+@export_range(0, 4, 1, "or_greater") var icosphere_subdivisions: int = 1:
 	set(value):
 		icosphere_subdivisions = value
 		emit_changed()
 ## How much the noise deforms the icospheres, as a fraction of their radius. 0 keeps them round.
-@export_range(0.0, 0.6) var icosphere_amplitude: float = 0.4:
+@export_range(0.0, 0.6, 0.01, "or_greater") var icosphere_amplitude: float = 0.4:
 	set(value):
 		icosphere_amplitude = value
 		emit_changed()
 ## Frequency of the deformation noise. Higher values make more and smaller bumps.
-@export_range(0.1, 10.0) var icosphere_frequency: float = 1.5:
+@export_range(0.1, 10.0, 0.1, "or_greater") var icosphere_frequency: float = 1.5:
 	set(value):
 		icosphere_frequency = value
 		emit_changed()
@@ -57,7 +57,7 @@ enum Type {
 #region LEAVES
 ## Leaves per branch, spread from [member leaf_start] to the tip. [br][br]
 ## With [member leaf_double], each leaf is 2 cards.
-@export_range(1, 50) var leaf_count: int = 12:
+@export_range(1, 50, 1, "or_greater") var leaf_count: int = 12:
 	set(value):
 		leaf_count = value
 		emit_changed()
@@ -68,7 +68,7 @@ enum Type {
 		emit_changed()
 ## Height of the leaf cards, in meters, before [member leaf_size_variance], [member leaf_size_curve]
 ## and [member leaf_length_influence].
-@export_range(0.05, 3.0, 0.01, "suffix:m") var leaf_size: float = 0.6:
+@export_range(0.05, 3.0, 0.01, "suffix:m", "or_greater") var leaf_size: float = 0.6:
 	set(value):
 		leaf_size = value
 		emit_changed()
