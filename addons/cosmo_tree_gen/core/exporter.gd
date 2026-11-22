@@ -81,7 +81,6 @@ static func _write_import_lods(path: String, tree: CosmoTreeGen, impostor: MeshI
 
 	# Godot automatic LODs break the leaf cards
 	import.set_value("params", "meshes/generate_lods", false)
-	import.set_value("params", "import_script/path", LOD_POST_IMPORT.resource_path)
 	return import.save(path + ".import")
 
 
@@ -94,9 +93,10 @@ static func _range(begin: float, end: float) -> Dictionary:
 	}
 
 
-static func _set_root_name(path: String, name: String) -> Error:
+static func _write_import_root(path: String, name: String) -> Error:
 	var import := _get_import_file(path)
 	import.set_value("params", "nodes/root_name", name)
+	import.set_value("params", "import_script/path", LOD_POST_IMPORT.resource_path)
 	return import.save(path + ".import")
 
 
@@ -185,7 +185,7 @@ static func export_gltf(path: String, tree: CosmoTreeGen, options: Dictionary = 
 		err = _write_import_lods(path, tree, impostor)
 
 	if err == OK:
-		err = _set_root_name(path, tree.name)
+		err = _write_import_root(path, tree.name)
 
 	if err == OK:
 		var fs := EditorInterface.get_resource_filesystem()
