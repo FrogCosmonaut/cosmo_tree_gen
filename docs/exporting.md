@@ -48,7 +48,8 @@ If `generate_lod` or *Impostor* isn't None, the exporter also changes the `.impo
 - Sets the `cast_shadow` of the impostor from the settings.
 - Disables Godot's automatic LOD generation (`meshes/generate_lods`), because it breaks the leaf cards. Don't turn it back on.
 - Adds an import script (`lod_post_import.gd`) that restores the `custom_aabb` of the LODs, so they all swap at the same distance.  
-  With an impostor, the box is wider, so the billboard isn't cut at the screen edges when it turns.
+  With an impostor, the box is wider, so the billboard isn't cut at the screen edges when it turns.  
+  It also adds the groups `cosmo_tree` (root), `cosmo_tree_mesh` (meshes) and `cosmo_tree_collision` (collisions).
 
 Note: if you change the LOD or impostor settings, you need to export the tree again.  
 Note: the impostor is baked on every export. With *Use External Material*, changes to your materials reach the exported LODs, but not the impostor: it keeps what it was baked with until you export again.  

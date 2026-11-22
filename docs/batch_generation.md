@@ -110,7 +110,6 @@ Some tips:
   Adding can end in negative values, e.g. a `lean` of `0.05` plus `-0.1`.
 - Parameters from 0 to 1, like `start`, `end` or `leaf_start`, can go over 1 when multiplied. Cap them with `minf(value, 1.0)`.
 - Be careful with integers like `count` or `leaf_count`: adding `randi_range(-3, 3)` to a small value can go below the minimum.
-- The range of each parameter is in [Parameters](parameters.md).
 
 ## Collisions, LODs, impostor and materials
 Presets don't save `generate_lod` or the collision parameters, so set them in your script.  
