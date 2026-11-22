@@ -219,6 +219,14 @@ static func _get_backlight(tree: CosmoTreeGen) -> Color:
 	return Color.BLACK
 
 
+static func _get_specular(tree: CosmoTreeGen) -> float:
+	if tree.foliage_material is ShaderMaterial:
+		return _get_shader_param(tree.foliage_material as ShaderMaterial, &"specular", 0.2)
+	if tree.foliage_material is BaseMaterial3D:
+		return (tree.foliage_material as BaseMaterial3D).metallic_specular
+	return 0.5
+
+
 static func _hemi_octahedron(coord: Vector2) -> Vector3:
 	var x := coord.x - coord.y
 	var z := coord.x + coord.y - 1.0
@@ -260,6 +268,7 @@ static func _bake_static(tree: CosmoTreeGen) -> QuadMesh:
 	material.set_shader_parameter("albedo_texture", textures[0])
 	material.set_shader_parameter("normal_texture", textures[1])
 	material.set_shader_parameter("backlight", _get_backlight(tree))
+	material.set_shader_parameter("specular", _get_specular(tree))
 
 	var quad := QuadMesh.new()
 	quad.size = size
@@ -316,6 +325,7 @@ static func _bake_octahedral(tree: CosmoTreeGen) -> QuadMesh:
 	material.set_shader_parameter("scale", scale)
 	material.set_shader_parameter("position_offset", center)
 	material.set_shader_parameter("backlight", _get_backlight(tree))
+	material.set_shader_parameter("specular", _get_specular(tree))
 
 	var quad := QuadMesh.new()
 	quad.size = Vector2.ONE * 2.0 * scale
